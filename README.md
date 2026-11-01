@@ -13,7 +13,7 @@ The Android release uses the same WebExtension source and manifest; it is not a 
 
 **Important:** Firefox Android requires an AMO-signed `.xpi` for normal installation. A source ZIP or the unsigned package artifact is not directly installable.
 
-1. Download the signed `.xpi` from the GitHub Actions artifact/release produced by the signing workflow, or install the listed add-on from Firefox Add-ons if it is published there.
+1. Open **Actions → Build Firefox Android package → latest successful run → Artifacts** and download `instamind-firefox-android`. Use the `.xpi` inside that artifact when signing is configured. Do **not** upload GitHub's green **Code → Download ZIP** source archive to AMO; it contains the repository folder and is not a ready-to-install extension package. The generated extension package has `manifest.json` directly at its archive root.
 2. If installing a self-distributed signed XPI: download it to your Android device.
 3. In Firefox Android, open **Settings → About Firefox** and tap the Firefox logo five times to reveal the install-from-file option (the exact menu wording can vary by Firefox version).
 4. Return to Settings and choose **Install Extension from File**, select the signed `.xpi`, then confirm.
