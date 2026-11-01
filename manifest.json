@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "InstaMind AI",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A privacy-conscious assistant for reviewing Instagram accounts you follow on Firefox desktop and Android.",
   "permissions": [
     "activeTab",
@@ -39,7 +39,11 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "instamind-ai@paliparsa",
-      "strict_min_version": "109.0"
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"],
+        "optional": ["websiteContent"]
+      }
     }
   }
 }
