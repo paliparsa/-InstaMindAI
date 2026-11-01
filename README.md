@@ -39,7 +39,7 @@ Open Settings from the popup and add your own Google Gemini API key. It is store
 ## Privacy and boundaries
 - Never asks for Instagram credentials, cookies, session tokens, or DMs.
 - Reads only content already visible in your logged-in tab.
-- AI analysis is opt-in per profile. Visible profile data is sent to Gemini only when you press Analyze.
+- AI analysis is opt-in per profile. Before the first analysis, Firefox asks permission to transmit website content (or an explicit confirmation is shown on older Firefox versions). Visible profile data is sent to Gemini only after consent and when you press Analyze.
 - Does not infer gender, sex, age, ethnicity, religion, sexual orientation, health, or other sensitive traits from photos, names or indirect clues.
 - No automated unfollowing, scraping of private data, or bypassing platform limits.
 
