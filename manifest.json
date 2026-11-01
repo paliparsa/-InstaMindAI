@@ -1,12 +1,45 @@
 {
   "manifest_version": 2,
   "name": "InstaMind AI",
-  "version": "0.1.0",
-  "description": "A privacy-conscious assistant for reviewing Instagram accounts you follow.",
-  "permissions": ["activeTab", "storage", "downloads", "tabs", "https://www.instagram.com/*", "https://generativelanguage.googleapis.com/*"],
-  "browser_action": {"default_title": "InstaMind AI", "default_popup": "popup.html"},
-  "options_ui": {"page": "options.html", "open_in_tab": true},
-  "background": {"scripts": ["background.js"], "persistent": false},
-  "content_scripts": [{"matches": ["https://www.instagram.com/*"], "js": ["content.js"], "run_at": "document_idle"}],
-  "browser_specific_settings": {"gecko": {"id": "instamind-ai@paliparsa", "strict_min_version": "109.0"}}
+  "version": "0.2.0",
+  "description": "A privacy-conscious assistant for reviewing Instagram accounts you follow on Firefox desktop and Android.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "downloads",
+    "tabs",
+    "https://www.instagram.com/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "browser_action": {
+    "default_title": "InstaMind AI",
+    "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.instagram.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "instamind-ai@paliparsa",
+      "strict_min_version": "109.0"
+    }
+  }
 }
