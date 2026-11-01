@@ -23,24 +23,52 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      # Build from a clean extension-only directory. This guarantees that
+      # manifest.json is at the ZIP/XPI root, not inside a parent folder.
+      - name: Stage extension files
+        run: |
+          mkdir -p extension dist
+          cp manifest.json *.js *.html *.css extension/
+          test -f extension/manifest.json
+          echo "Staged extension root:"
+          find extension -maxdepth 1 -type f -printf '%f\n' | sort
+
       - name: Lint WebExtension
-        run: npx --yes web-ext@latest lint --source-dir .
+        run: npx --yes web-ext@latest lint --source-dir extension
+
       - name: Build unsigned package
-        run: npx --yes web-ext@latest build --source-dir . --artifacts-dir dist --overwrite-dest --ignore-files README.md android/** .github/** package.json
+        run: |
+          npx --yes web-ext@latest build --source-dir extension --artifacts-dir dist --overwrite-dest
+          PACKAGE="$(find dist -maxdepth 1 -type f -name '*.zip' -print -quit)"
+          test -n "$PACKAGE"
+          unzip -Z1 "$PACKAGE" | grep -qx 'manifest.json'
+          echo "Verified package root contains manifest.json: $PACKAGE"
+
       - name: Sign for self-distribution (when AMO secrets are configured)
         env:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         run: |
           if [ -n "$AMO_JWT_ISSUER" ] && [ -n "$AMO_JWT_SECRET" ]; then
-            npx --yes web-ext@latest sign --source-dir . --artifacts-dir dist --api-key "$AMO_JWT_ISSUER" --api-secret "$AMO_JWT_SECRET" --channel unlisted --ignore-files README.md android/** .github/** package.json
+            npx --yes web-ext@latest sign --source-dir extension --artifacts-dir dist --api-key "$AMO_JWT_ISSUER" --api-secret "$AMO_JWT_SECRET" --channel unlisted
           else
             echo "AMO secrets not configured; only the unsigned ZIP will be available."
           fi
+
+      - name: Verify signed XPI (when generated)
+        run: |
+          for PACKAGE in dist/*.xpi; do
+            [ -e "$PACKAGE" ] || continue
+            unzip -Z1 "$PACKAGE" | grep -qx 'manifest.json'
+            echo "Verified XPI root contains manifest.json: $PACKAGE"
+          done
+
       - name: Upload package artifacts
         uses: actions/upload-artifact@v4
         with:
