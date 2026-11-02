@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.4 — Permanent Keep from Following exclusion
+- Add a Review action, “Keep from Following”, that stores a case-insensitive permanent local exclusion and removes the account from the shared account library.
+- Excluded usernames are filtered out from future Account Manager JSON imports and live Following collection in Popup, and are skipped by current-profile analysis.
+- Existing Review pages refresh through shared storage changes; excluded entries are removed from active review pages and will not be re-queued from the local library.
+- Add an import exclusion regression test and bump Firefox and Chrome to 0.8.4.
+
+
 ## 0.8.3 — Manual unfollow from Account Manager and compact Review
 - Account Manager adds a manual “Mark unfollowed” action for Following records. After the user unfollows directly on Instagram, marking removes that account from the local manager list.
 - Review’s “Mark as unfollowed” action removes the record from the shared local account library, so it disappears from Account Manager and open Review pages.
