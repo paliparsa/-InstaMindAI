@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.5 — Complete Following scan and follow-back status
+- Add a one-click Scan Following action to the extension popup.
+- Fetch the signed-in account's Following and Followers pages from Instagram's internal web API, paginate both lists, and compare account IDs/usernames to determine follow-backs.
+- Mark follow-backs green, non-followbacks red, and unverified results amber; add relationship filters and retain existing account records, Keep labels, and AI review results.
+- Show scan progress and totals; keep all scan results local and do not automate unfollow actions.
+- Bump Firefox and Chrome builds to 0.8.5.
+
+
 ## 0.8.4 — Permanent Keep from Following exclusion
 - Add a Review action, “Keep from Following”, that stores a case-insensitive permanent local exclusion and removes the account from the shared account library.
 - Excluded usernames are filtered out from future Account Manager JSON imports and live Following collection in Popup, and are skipped by current-profile analysis.
