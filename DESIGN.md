@@ -71,3 +71,9 @@ Use native buttons and form controls, visible focus, text labels for status, key
 - Manual “Mark as unfollowed” in Review removes the account from the shared local account library, which synchronizes the removal to Account Manager and other open extension pages.
 - Account Manager exposes the same manual decision for records still marked Following; the user completes unfollow on Instagram first, then marks and removes the record locally.
 - Bulk review checks the shared account library before analyzing each queued item and skips entries removed while the queue is running.
+
+
+## Permanent Keep from Following exclusion (0.8.4)
+- Review includes a “Keep from Following” action distinct from manual unfollow. It permanently excludes the selected username using a case-insensitive local exclusion list.
+- Excluded usernames are removed from shared account storage and filtered from future imported Instagram JSON and visible Following collection. Popup current-profile analysis also skips excluded usernames.
+- Exclusions are local to the browser and can be cleared only by removing the matching entry from extension local storage; the UI does not offer a restore control.
