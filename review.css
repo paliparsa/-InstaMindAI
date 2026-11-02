@@ -11,3 +11,5 @@
 .result-main strong{color:#fff}.result-main p,.result-state{color:rgba(255,255,255,.65)}
 .result-tag{border-color:#777;color:#fff}.result-tag.neutral{border-color:#444;color:rgba(255,255,255,.68)}
 .consent-row{background:#050505;border-color:#333}.consent-row label{color:#fff}.consent-row input{accent-color:#fff}
+
+.result-state.error,.review-actions #revoke{color:#fff}
