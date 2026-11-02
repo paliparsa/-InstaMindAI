@@ -59,3 +59,10 @@ GitHub Actions builds and validates the Firefox/Android and Chrome packages. Ins
 
 ## License
 MIT
+
+
+## Review queue improvements (0.8.0)
+- Pause after the current profile and resume later from the next account. The queue checkpoint is stored locally and survives closing the review tab.
+- Results separate the profile summary, account categories, text evidence, image findings, confidence and model/fallback information.
+- The **Unfollow manually** action opens the Instagram profile; you must review and confirm the unfollow on Instagram yourself. InstaMind does not automate account actions.
+- Settings show per-model input, output and total tokens recorded from successful Gemini API responses made by InstaMind. This is not total API-key usage across other apps, and remaining quota is not available through this API.
