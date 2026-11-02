@@ -56,8 +56,8 @@ function relationLabel(x){const a=Array.isArray(x.relationshipTypes)?x.relations
 function profileUrl(x){return "https://www.instagram.com/"+encodeURIComponent(x.username)+"/"}
 function openReview(query){browser.tabs.create({url:browser.runtime.getURL("review.html"+query)})}
 function status(message,error=false){$("status").textContent=message;$("status").classList.toggle("error",error)}
-async function load(){const d=await browser.storage.local.get("accounts");records=Array.isArray(d.accounts)?d.accounts:[];render()}
-browser.storage.onChanged?.addListener((changes,area)=>{if(area==="local"&&changes.accounts){records=Array.isArray(changes.accounts.newValue)?changes.accounts.newValue:[];render()}})
+async function load(){const d=await browser.storage.local.get(["accounts","excludedFollowingAccounts"]);records=Array.isArray(d.accounts)?d.accounts:[];const excluded=new Set((d.excludedFollowingAccounts||[]).map(x=>String(x).toLowerCase()));records=records.filter(x=>!excluded.has(String(x.username||"").toLowerCase()));render()}
+browser.storage.onChanged?.addListener((changes,area)=>{if(area==="local"&&(changes.accounts||changes.excludedFollowingAccounts)){const latest=changes.accounts?changes.accounts.newValue:records,excluded=changes.excludedFollowingAccounts?changes.excludedFollowingAccounts.newValue:null;if(Array.isArray(latest))records=latest;if(Array.isArray(excluded)){const set=new Set(excluded.map(x=>String(x).toLowerCase()));records=records.filter(x=>!set.has(String(x.username||"").toLowerCase()))}render()}})
 async function save(){await browser.storage.local.set({accounts:records});render()}
 function filtered(){const q=$("search").value.trim().toLowerCase(),f=$("filter").value;return records.filter(x=>{
  const rel=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[],text=[x.username,x.displayText,x.analysis?.bioSummary,(x.analysis?.contentCategories||[]).join(" "),(x.analysis?.contentFlags||[]).join(" ")].join(" ").toLowerCase();
@@ -86,14 +86,14 @@ function render(){
 }
 async function importFiles(files){
  if(!files.length)return;
- let imported=0,duplicates=0,failed=[],syncFollowingSnapshot=false;const incomingAll=[];
+ let imported=0,duplicates=0,failed=[],syncFollowingSnapshot=false;const incomingAll=[],savedExcluded=await browser.storage.local.get("excludedFollowingAccounts"),excluded=new Set((savedExcluded.excludedFollowingAccounts||[]).map(x=>String(x).toLowerCase()));
  for(const file of files){
   if(!file.name.toLowerCase().endsWith(".json")&&![ "application/json","text/json"].includes(file.type)){failed.push(file.name+": not a JSON file");continue}
   if(file.size>50*1024*1024){failed.push(file.name+": file exceeds 50 MB");continue}
   try{
    const data=JSON.parse(await file.text()),parsed=extractJsonAccounts(data,file.name);if(!parsed.length){failed.push(file.name+": no Instagram accounts were recognized");continue}
    if($("followingSnapshot").checked&&relationFromName(file.name,"unknown")==="following")syncFollowingSnapshot=true;
-   incomingAll.push(...parsed);
+   incomingAll.push(...parsed.filter(x=>!excluded.has(String(x.username||"").toLowerCase())));
   }catch(e){failed.push(file.name+": "+(e.message||"invalid JSON"))}
  }
  let syncResult=null;
