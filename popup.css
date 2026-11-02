@@ -76,3 +76,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .review-mini:hover{background:#171717}
 .tag.flagged{font-weight:800}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+.relationship-state.follows_you{color:#59cf8a;border-color:#286c45;background:rgba(40,108,69,.12)}
+.relationship-state.doesnt_follow_you{color:#ff7777;border-color:#783c3c;background:rgba(120,60,60,.12)}
+.relationship-state.unknown{color:#e8b75c;border-color:#775b2d}
+.scan-button{font-size:11px;font-weight:750;letter-spacing:.15px;min-height:42px}
