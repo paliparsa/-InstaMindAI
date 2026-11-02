@@ -66,6 +66,7 @@ async function start(){
  if(running)return;
  const cfg=await browser.storage.local.get(["apiKey","accounts",CHECKPOINT_KEY]);if(!cfg.apiKey){say("Add your text-analysis Gemini API key in Settings before starting.",true);return}
  const records=Array.isArray(cfg.accounts)?cfg.accounts:[],one=params.get("username"),scope=scopeKey(one),checkpoint=cfg[CHECKPOINT_KEY];
+ if(checkpoint&&checkpoint.scope!==scope){say("Another review queue is paused. Resume it from its original Review page before starting a different queue.",true);return}
  let queue=[],startAt=0;
  if(checkpoint&&checkpoint.scope===scope&&Array.isArray(checkpoint.queue)){
   const byName=new Map(records.map(x=>[String(x.username||"").toLowerCase(),x]));queue=checkpoint.queue.map(name=>byName.get(String(name).toLowerCase())).filter(Boolean);startAt=Math.min(Number(checkpoint.nextIndex)||0,queue.length);
