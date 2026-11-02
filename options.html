@@ -37,7 +37,7 @@ body{width:auto;max-width:760px;min-height:100vh;margin:0 auto;padding:30px 20px
 .add-model{padding:0 14px;min-height:40px;border:1px solid #fff;border-radius:7px;background:#fff;color:#000;font-weight:750;cursor:pointer;white-space:nowrap}
 .add-model:hover,.save-settings:hover{background:#dedede}
 .save-settings{margin-top:20px;min-height:42px;padding:0 18px;border:1px solid #fff;border-radius:7px;background:#fff;color:#000;font-weight:750;cursor:pointer}
-.saved{min-height:20px;margin:12px 0 0;color:#fff;font-size:12px}
+.usage-list{display:grid;gap:8px;margin:12px 0}.usage-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px;border:1px solid #303030;border-radius:7px;background:#000}.usage-row strong{display:block;font-size:12px;overflow-wrap:anywhere}.usage-row small{display:block;color:rgba(255,255,255,.58);font-size:10px;margin-top:3px}.usage-total{text-align:right;font-size:13px;font-variant-numeric:tabular-nums}.usage-empty{color:rgba(255,255,255,.62);font-size:11px}.saved{min-height:20px;margin:12px 0 0;color:#fff;font-size:12px}
 .privacy{margin-top:24px;padding-top:18px;border-top:1px solid #282828}
 @media(max-width:560px){body{margin:0 auto;padding:18px 12px 32px}.settings-card{padding:17px}.model-row{grid-template-columns:23px minmax(0,1fr) 28px 28px 30px;gap:5px}.move-model,.remove-model{width:28px}.model-heading{align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:no-preference){.model-row{transition:border-color .12s,background .12s,opacity .12s}}
@@ -69,6 +69,7 @@ body{width:auto;max-width:760px;min-height:100vh;margin:0 auto;padding:30px 20px
 <div class="add-model-row"><input id="addVisionModel" class="settings-input" placeholder="e.g. gemini-2.5-flash" aria-label="New image model ID"><button type="button" id="addVision" class="add-model">Add model</button></div>
 </section>
 
+<section class="settings-section usage-section" aria-labelledby="usage-title"><h3 id="usage-title">Gemini token usage</h3><p class="note">Usage recorded from successful requests made by InstaMind on this browser and API key. It does not include requests made elsewhere. Google does not expose a reliable remaining-token balance through this API.</p><div id="usageStats" class="usage-list"><p class="note">Loading usage…</p></div><button type="button" id="refreshUsage" class="add-model">Refresh usage</button></section>
 <button id="save" class="save-settings">Save settings</button>
 <p id="status" class="saved" role="status" aria-live="polite"></p>
 <div class="privacy"><h3>Privacy</h3><p class="note">API keys and model lists are stored locally in this browser and are not included in account exports. On review, visible profile text and up to two randomly sampled visible post thumbnails may be sent to Google Gemini only after explicit consent. No gender, identity, age, or other sensitive traits are inferred from photos, names, or faces. No likes, follows, messages, or unfollows are performed.</p></div>
