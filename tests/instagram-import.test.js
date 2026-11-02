@@ -9,8 +9,8 @@ assert.notEqual(start, -1, "account import helpers must exist");
 assert.notEqual(end, -1, "account import helper boundary must exist");
 
 const sandbox = { URL, Date, Map, Set };
-vm.runInNewContext(source.slice(start, end) + "\nglobalThis.importApi = { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot, relationshipState };", sandbox);
-const { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot, relationshipState } = sandbox.importApi;
+vm.runInNewContext(source.slice(start, end) + "\nglobalThis.importApi = { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot, relationshipState, filterExcludedAccounts };", sandbox);
+const { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot, relationshipState, filterExcludedAccounts } = sandbox.importApi;
 
 assert.equal(usernameFromUrl("https://www.instagram.com/_u/sanamiriartist"), "sanamiriartist");
 assert.equal(usernameFromUrl("https://www.instagram.com/sanamiriartist/"), "sanamiriartist");
@@ -48,6 +48,8 @@ assert.equal(relationshipState({ followingStatus: "pending_verification", relati
 assert.equal(reconciled.imported, 1);
 assert.equal(reconciled.duplicates, 1);
 assert.deepEqual(Array.from(parsedSample[0].relationshipTypes), ["following"]);
+const filteredExclusions = filterExcludedAccounts([{ username: "keepthis" }, { username: "skipme" }, { username: "SKIPME" }], ["SkipMe"]);
+assert.deepEqual(Array.from(filteredExclusions, item => item.username), ["keepthis"], "permanently excluded usernames must not return from imports");
 
 const relationships_following = Array.from({ length: 30000 }, (_, i) => ({
   title: "account" + i,

@@ -45,3 +45,11 @@
 .result-note{font-size:10px;color:#999}
 .result-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.result-actions button{width:auto;min-width:125px;font-size:10px;padding:7px 10px}
 @media(max-width:520px){.result-actions{display:grid;grid-template-columns:1fr 1fr}.result-actions button{min-width:0}.progress-meta{font-size:9px}}
+
+/* Keep bulk review results compact; open a profile's details only when needed. */
+.result-expanded{margin-top:7px;border:1px solid #292929;border-radius:7px;background:#050505}
+.result-expanded>summary{padding:8px 10px;color:rgba(255,255,255,.78);font-size:11px;cursor:pointer;list-style-position:inside}
+.result-expanded[open]>summary{border-bottom:1px solid #292929;color:#fff}
+.result-expanded>.result-summary,.result-expanded>.result-details,.result-expanded>.result-section,.result-expanded>.result-note,.result-expanded>.result-actions{margin-left:10px;margin-right:10px}
+.result-expanded>.result-actions{margin-bottom:10px}
+.result-expanded:focus-visible{outline:2px solid #fff;outline-offset:2px}

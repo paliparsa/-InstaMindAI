@@ -16,10 +16,11 @@ function renderResult(record,state="Reviewed",error=false){
  addText(identity,"strong","result-username","@"+record.username);
  addText(identity,"span","result-date",record.lastReviewedAt?new Date(record.lastReviewedAt).toLocaleString():"");
  const status=addText(top,"span","result-state"+(error?" error":""),state);top.append(identity,status);row.append(top);
+ const compact=document.createElement("details");compact.className="result-expanded";const compactSummary=document.createElement("summary");compactSummary.textContent="@"+record.username+" · Open review details";compact.append(compactSummary);row.append(compact);
  const analysis=record.analysis||{};
- if(analysis.bioSummary)addText(row,"p","result-summary",analysis.bioSummary);
- else if(record.reviewError)addText(row,"p","result-summary",record.reviewError);
- else addText(row,"p","result-summary","No summary was returned for this profile.");
+ if(analysis.bioSummary)addText(compact,"p","result-summary",analysis.bioSummary);
+ else if(record.reviewError)addText(compact,"p","result-summary",record.reviewError);
+ else addText(compact,"p","result-summary","No summary was returned for this profile.");
  const details=document.createElement("div");details.className="result-details";
  if(analysis.accountType)addTag(details,"Account: "+analysis.accountType);
  (analysis.contentCategories||[]).forEach(x=>addTag(details,x,"category"));
@@ -32,19 +33,20 @@ function renderResult(record,state="Reviewed",error=false){
  if(record.analysisModel)addTag(details,"Text model · "+record.analysisModel);
  if(record.visionModel)addTag(details,"Image model · "+record.visionModel);
  if(record.modelFallbacks?.length)addTag(details,"Fallback · "+record.modelFallbacks.join(" → "));
- row.append(details);
- if((analysis.reviewSignals||[]).length){const evidence=document.createElement("section");evidence.className="result-section";addText(evidence,"h4","","Text evidence");const ul=document.createElement("ul");(analysis.reviewSignals||[]).forEach(x=>addText(ul,"li","",x));evidence.append(ul);row.append(evidence)}
- if((analysis.limitations||[]).length){const limitations=document.createElement("details");limitations.className="result-section";addText(limitations,"summary","","Analysis limitations");const ul=document.createElement("ul");analysis.limitations.forEach(x=>addText(ul,"li","",x));limitations.append(ul);row.append(limitations)}
+ compact.append(details);
+ if((analysis.reviewSignals||[]).length){const evidence=document.createElement("section");evidence.className="result-section";addText(evidence,"h4","","Text evidence");const ul=document.createElement("ul");(analysis.reviewSignals||[]).forEach(x=>addText(ul,"li","",x));evidence.append(ul);compact.append(evidence)}
+ if((analysis.limitations||[]).length){const limitations=document.createElement("details");limitations.className="result-section";addText(limitations,"summary","","Analysis limitations");const ul=document.createElement("ul");analysis.limitations.forEach(x=>addText(ul,"li","",x));limitations.append(ul);compact.append(limitations)}
  const vision=record.visionAnalysis;
- if(vision?.result?.imageFindings?.length){const section=document.createElement("section");section.className="result-section";addText(section,"h4","","Sampled image findings");vision.result.imageFindings.forEach(f=>{const item=document.createElement("div");item.className="finding";addText(item,"strong","",String(f.classification||"Finding").replaceAll("_"," "));addText(item,"p","",f.evidence||"No visual evidence description was returned.");if(f.confidence!=null)addText(item,"small","","Confidence "+Math.round(Number(f.confidence)*100)+"%");section.append(item)});row.append(section)}
- else if(vision?.skipped)addText(row,"p","result-note","Image review skipped: "+(vision.reason||"not configured"));
- else if(vision?.error||vision?.ok===false)addText(row,"p","result-note","Image review unavailable: "+(vision.error||"unknown error"));
+ if(vision?.result?.imageFindings?.length){const section=document.createElement("section");section.className="result-section";addText(section,"h4","","Sampled image findings");vision.result.imageFindings.forEach(f=>{const item=document.createElement("div");item.className="finding";addText(item,"strong","",String(f.classification||"Finding").replaceAll("_"," "));addText(item,"p","",f.evidence||"No visual evidence description was returned.");if(f.confidence!=null)addText(item,"small","","Confidence "+Math.round(Number(f.confidence)*100)+"%");section.append(item)});compact.append(section)}
+ else if(vision?.skipped)addText(compact,"p","result-note","Image review skipped: "+(vision.reason||"not configured"));
+ else if(vision?.error||vision?.ok===false)addText(compact,"p","result-note","Image review unavailable: "+(vision.error||"unknown error"));
  const relationship=relationshipState(record),relationshipTag=addTag(details,relationship==="following"?"Following":relationship==="unfollowed"?"Unfollowed":"Pending verification",relationship);relationshipTag.classList.add("relationship-state");relationshipTag.title=relationship==="following"?"هنوز فالو می‌کنی.":relationship==="unfollowed"?"آنفالو شده.":"هنوز وضعیت نهایی تأیید نشده.";
  const actions=document.createElement("div");actions.className="result-actions";
  const open=document.createElement("button");open.type="button";open.className="secondary";open.textContent="Open profile";open.addEventListener("click",()=>browser.tabs.create({url:safeProfileUrl(record.username),active:true}));actions.append(open);
  const marked=relationshipState(record)==="unfollowed";
  const mark=document.createElement("button");mark.type="button";mark.className="secondary"+(marked?" marked":"");mark.textContent=marked?"Marked unfollowed":"Mark as unfollowed";mark.title=marked?"This account is marked as manually unfollowed in your local list":"Use after you unfollow this account yourself on Instagram";mark.disabled=marked;mark.addEventListener("click",()=>markUnfollowed(record.username,mark,details));actions.append(mark);
- row.append(actions);$("results").append(row);
+ const keepFollowing=document.createElement("button");keepFollowing.type="button";keepFollowing.className="secondary";keepFollowing.textContent="Keep from Following";keepFollowing.title="Permanently exclude this account from future imports, collection, and review queues";keepFollowing.addEventListener("click",()=>excludeFromFollowing(record.username,keepFollowing));actions.append(keepFollowing);
+ compact.append(actions);$("results").append(row);
 }
 function progress(done,total,label){const percent=total?Math.round(done/total*100):0;$("progressTitle").textContent=label;$("progressCount").textContent=done+" / "+total;$("progressBar").style.width=percent+"%";$("progressBar").setAttribute("aria-valuenow",String(done));$("progressBar").setAttribute("aria-valuemax",String(total));$("progressPercent").textContent=percent+"%"}
 async function requestConsent(){const saved=await browser.storage.local.get("aiReviewConsentV2");if(saved.aiReviewConsentV2)return true;if(!$("consent").checked){say("Tick the consent box before sending profile text or sampled images to Gemini.",true);return false}let allowed=true;try{allowed=await browser.permissions.request({data_collection:["websiteContent"]})}catch(_){allowed=true}if(allowed)await browser.storage.local.set({aiReviewConsentV2:true});return allowed}
@@ -55,12 +57,17 @@ async function persist(record){const current=await browser.storage.local.get("ac
 async function markUnfollowed(username,button,details){
  const data=await browser.storage.local.get("accounts"),list=Array.isArray(data.accounts)?data.accounts:[],idx=list.findIndex(x=>String(x.username||"").toLowerCase()===username.toLowerCase());
  if(idx<0){say("This account is no longer in your local account list.",true);return}
- const current=list[idx],relations=Array.isArray(current.relationshipTypes)?current.relationshipTypes:[];
- list[idx]={...current,relationshipTypes:relations.filter(x=>x!=="following"),followingStatus:"unfollowed",followingStatusUpdatedAt:new Date().toISOString()};
- await browser.storage.local.set({accounts:list});
- button.textContent="Marked unfollowed";button.disabled=true;button.classList.add("marked");button.title="Saved locally as manually unfollowed";
- details.querySelectorAll(".relationship-state").forEach(n=>n.remove());const stateTag=addTag(details,"Unfollowed","unfollowed");stateTag.classList.add("relationship-state");
- say("@"+username+" marked as unfollowed. The local status is now synchronized across the extension.");
+ await browser.storage.local.set({accounts:list.filter(x=>String(x.username||"").toLowerCase()!==username.toLowerCase())});
+ button.textContent="Marked unfollowed · Removed";button.disabled=true;button.classList.add("marked");
+ say("@"+username+" marked as manually unfollowed and removed from Account Manager.");
+}
+async function excludeFromFollowing(username,button){
+ const key=String(username||"").toLowerCase();if(!key)return;
+ const saved=await browser.storage.local.get(["excludedFollowingAccounts","accounts"]),excluded=new Set((saved.excludedFollowingAccounts||[]).map(x=>String(x).toLowerCase()));excluded.add(key);
+ const list=Array.isArray(saved.accounts)?saved.accounts:[],remaining=list.filter(x=>String(x.username||"").toLowerCase()!==key);
+ await browser.storage.local.set({excludedFollowingAccounts:[...excluded],accounts:remaining});
+ button.textContent="Kept out · Excluded";button.disabled=true;button.classList.add("marked");
+ say("@"+username+" is permanently excluded from future imports, collection, and review queues.");
 }
 async function removeMissingProfile(username){const data=await browser.storage.local.get("accounts"),list=Array.isArray(data.accounts)?data.accounts:[];await browser.storage.local.set({accounts:list.filter(x=>String(x.username||"").toLowerCase()!==username.toLowerCase())})}
 async function reviewOne(record,index,total){
@@ -78,7 +85,7 @@ async function reviewOne(record,index,total){
 }
 function scopeKey(one){return one?"one:"+one.toLowerCase():"all"}
 async function setCheckpoint(value){await browser.storage.local.set({[CHECKPOINT_KEY]:value})}
-browser.storage.onChanged?.addListener((changes,area)=>{if(area!=="local"||!changes.accounts||!Array.isArray(changes.accounts.newValue))return;const map=new Map(changes.accounts.newValue.map(x=>[String(x.username||"").toLowerCase(),x]));document.querySelectorAll(".result-card").forEach(card=>{const username=card.querySelector(".result-username")?.textContent?.replace(/^@/,"").toLowerCase();if(!username)return;const record=map.get(username);if(!record){card.remove();return}const state=relationshipState(record),tag=card.querySelector(".relationship-state");if(tag){tag.textContent=state==="following"?"Following":state==="unfollowed"?"Unfollowed":"Pending verification";tag.classList.remove("following","unfollowed","pending_verification");tag.classList.add(state)}const mark=card.querySelector(".result-actions button:last-child");if(mark){mark.textContent=state==="unfollowed"?"Marked unfollowed":"Mark as unfollowed";mark.disabled=state==="unfollowed";mark.classList.toggle("marked",state==="unfollowed")}})});
+browser.storage.onChanged?.addListener((changes,area)=>{if(area!=="local"||!changes.accounts||!Array.isArray(changes.accounts.newValue))return;const map=new Map(changes.accounts.newValue.map(x=>[String(x.username||"").toLowerCase(),x]));document.querySelectorAll(".result-card").forEach(card=>{const username=card.querySelector(".result-username")?.textContent?.replace(/^@/,"").toLowerCase();if(!username)return;const record=map.get(username);if(!record){card.remove();return}const state=relationshipState(record),tag=card.querySelector(".relationship-state");if(tag){tag.textContent=state==="following"?"Following":state==="unfollowed"?"Unfollowed":"Pending verification";tag.classList.remove("following","unfollowed","pending_verification");tag.classList.add(state)}const mark=card.querySelector(".result-actions button:nth-child(2)");if(mark){mark.textContent=state==="unfollowed"?"Marked unfollowed":"Mark as unfollowed";mark.disabled=state==="unfollowed";mark.classList.toggle("marked",state==="unfollowed")}})});
 async function start(){
  if(running)return;
  const cfg=await browser.storage.local.get(["apiKey","accounts",CHECKPOINT_KEY]);if(!cfg.apiKey){say("Add your text-analysis Gemini API key in Settings before starting.",true);return}
@@ -97,6 +104,8 @@ async function start(){
  await setCheckpoint({scope,queue:queueNames,nextIndex:startAt,updatedAt:new Date().toISOString()});
  for(let i=startAt;i<queue.length;i++){
   if(pauseRequested)break;
+  const latest=await browser.storage.local.get("accounts"),latestNames=new Set((Array.isArray(latest.accounts)?latest.accounts:[]).map(x=>String(x.username||"").toLowerCase()));
+  if(!latestNames.has(String(queue[i].username||"").toLowerCase())){queue.splice(i,1);queueNames.splice(i,1);i--;await setCheckpoint({scope,queue:queueNames,nextIndex:done,updatedAt:new Date().toISOString()});progress(done,queue.length,"Removed unfollowed account — skipped");continue}
   const outcome=await reviewOne(queue[i],i,queue.length);
   if(outcome==="not_found"){
    queue.splice(i,1);queueNames.splice(i,1);i--;done=Math.max(startAt,i+1);

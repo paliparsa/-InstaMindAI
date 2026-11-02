@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.4 — Permanent Keep from Following exclusion
+- Add a Review action, “Keep from Following”, that stores a case-insensitive permanent local exclusion and removes the account from the shared account library.
+- Excluded usernames are filtered out from future Account Manager JSON imports and live Following collection in Popup, and are skipped by current-profile analysis.
+- Existing Review pages refresh through shared storage changes; excluded entries are removed from active review pages and will not be re-queued from the local library.
+- Add an import exclusion regression test and bump Firefox and Chrome to 0.8.4.
+
+
+## 0.8.3 — Manual unfollow from Account Manager and compact Review
+- Account Manager adds a manual “Mark unfollowed” action for Following records. After the user unfollows directly on Instagram, marking removes that account from the local manager list.
+- Review’s “Mark as unfollowed” action removes the record from the shared local account library, so it disappears from Account Manager and open Review pages.
+- Active bulk review skips records removed from the local library instead of analyzing them later from its stale queue.
+- Review results use collapsed, expandable detail sections to keep bulk-review pages shorter while preserving access to summaries, evidence, model metadata, and actions.
+- Bumped Firefox and Chrome extension versions to 0.8.3.
+
+
 ## 0.8.2 — Global relationship states and missing-profile pruning
 - Popup, Account Manager, and Review share the same local relationship states: Following, Unfollowed, and Pending verification.
 - Live storage listeners refresh open extension pages after a status change; counts, filters, and status chips stay synchronized.
