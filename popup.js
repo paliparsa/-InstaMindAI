@@ -26,8 +26,8 @@ function profileUrl(x){return "https://www.instagram.com/"+encodeURIComponent(x.
 function openReview(query){const url=browser.runtime.getURL("review.html"+query);browser.tabs.create({url})}
 function render(){
  $("total").textContent=records.length;$("kept").textContent=records.filter(x=>x.status==="keep").length;$("review").textContent=records.filter(x=>x.status!=="keep").length;
- const counts={following:0,unfollowed:0,pending_verification:0};records.forEach(x=>counts[relationshipState(x)]++);
- $("followingCount").textContent=counts.following;$("unfollowedCount").textContent=counts.unfollowed;$("pendingCount").textContent=counts.pending_verification;
+ const counts={follows_you:0,doesnt_follow_you:0,unknown:0};records.forEach(x=>{if(x.followBackStatus==="follows_you")counts.follows_you++;else if(x.followBackStatus==="doesnt_follow_you")counts.doesnt_follow_you++;else counts.unknown++});
+ $("followingCount").textContent=counts.follows_you;$("unfollowedCount").textContent=counts.doesnt_follow_you;$("pendingCount").textContent=counts.unknown;
  const q=$("search").value.toLowerCase(),f=$("filter").value,root=$("accounts");root.textContent="";
  const list=records.filter(x=>(x.username+" "+(x.displayText||"")+" "+(x.analysis?.contentCategories||[]).join(" ")+" "+(x.analysis?.contentFlags||[]).join(" ")).toLowerCase().includes(q)&&(f==="all"||(f==="follows_you"&&x.followBackStatus==="follows_you")||(f==="doesnt_follow_you"&&x.followBackStatus==="doesnt_follow_you")||(f==="unknown"&&(!x.followBackStatus||x.followBackStatus==="unknown"))||(f==="keep"&&x.status==="keep")||(f==="review"&&x.status!=="keep")||(f==="unreviewed"&&!x.analysis)||(f==="flagged"&&x.flaggedForReview)));
  if(!list.length){const e=document.createElement("div");e.className="empty";e.textContent=records.length?"No matches.":"No accounts yet. Scan Following or collect visible accounts.";root.append(e)}
