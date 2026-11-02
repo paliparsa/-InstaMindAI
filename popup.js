@@ -1,4 +1,5 @@
-/* global browser */
+/* global browser, chrome */
+globalThis.browser = globalThis.browser || globalThis.chrome;
 const $=id=>document.getElementById(id);let records=[];
 async function load(){const d=await browser.storage.local.get("accounts");records=Array.isArray(d.accounts)?d.accounts:[];render()}
 async function save(){await browser.storage.local.set({accounts:records});render()}
