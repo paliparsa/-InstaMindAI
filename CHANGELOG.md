@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0 — Resumable review, clearer results and Gemini token tracking
+- Added pause-after-current-profile and resume-from-checkpoint for bulk and single-profile review; progress survives closing the review tab.
+- Reworked review results into readable profile summaries, evidence, categories, image findings, confidence and model details.
+- Added a profile shortcut that opens Instagram for a user-confirmed manual unfollow; the extension does not automate follow controls.
+- Added per-model input/output/total token tracking from Gemini usage metadata for successful requests made by InstaMind.
+- Clarified that remaining quota is not available through the API used by the extension.
+- Bumped Firefox and Chrome extension versions to 0.8.0.
+
 ## 0.7.3 — Recover content-script messaging and large local storage
 - Automatically inject the Instagram reader when an already-open tab has no receiving content-script listener, then retry the requested action.
 - Prevent duplicate content-script message listeners when the reader is injected more than once.
