@@ -39,6 +39,7 @@ function extractJsonAccounts(data,filename){
  }
  return [...foundByUsername.values()];
 }
+function filterExcludedAccounts(incomingRecords,excludedNames=[]){const excluded=new Set((Array.isArray(excludedNames)?excludedNames:[]).map(x=>String(x||"").toLowerCase()));return (Array.isArray(incomingRecords)?incomingRecords:[]).filter(x=>!excluded.has(String(x.username||"").toLowerCase()))}
 function reconcileFollowingSnapshot(existingRecords,incomingRecords,timestamp=new Date().toISOString()){
  const map=new Map((Array.isArray(existingRecords)?existingRecords:[]).map(x=>[String(x.username||"").toLowerCase(),x]));
  for(const [key,old] of map){const rel=Array.isArray(old.relationshipTypes)?old.relationshipTypes:[];if(rel.includes("following"))map.set(key,{...old,relationshipTypes:rel.filter(x=>x!=="following"),followingStatus:"pending_verification",followingSnapshotAt:timestamp})}
@@ -93,7 +94,7 @@ async function importFiles(files){
   try{
    const data=JSON.parse(await file.text()),parsed=extractJsonAccounts(data,file.name);if(!parsed.length){failed.push(file.name+": no Instagram accounts were recognized");continue}
    if($("followingSnapshot").checked&&relationFromName(file.name,"unknown")==="following")syncFollowingSnapshot=true;
-   incomingAll.push(...parsed.filter(x=>!excluded.has(String(x.username||"").toLowerCase())));
+   incomingAll.push(...filterExcludedAccounts(parsed,[...excluded]));
   }catch(e){failed.push(file.name+": "+(e.message||"invalid JSON"))}
  }
  let syncResult=null;
