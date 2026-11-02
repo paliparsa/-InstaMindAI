@@ -52,8 +52,23 @@ jobs:
           echo "Chrome extension root:"
           find extension -maxdepth 1 -type f -printf '%f\\n' | sort
 
-      - name: Lint Chrome WebExtension
-        run: npx --yes web-ext@latest lint --source-dir extension
+      - name: Validate Chrome extension
+        run: |
+          node --check extension/background.js
+          node --check extension/content.js
+          node --check extension/popup.js
+          node --check extension/options.js
+          node <<'NODE'
+          const fs = require('fs');
+          const m = JSON.parse(fs.readFileSync('extension/manifest.json', 'utf8'));
+          if (m.manifest_version !== 3) throw new Error('Chrome package must use Manifest V3');
+          if (!m.background?.service_worker) throw new Error('Missing MV3 service worker');
+          if (!m.action?.default_popup) throw new Error('Missing Chrome action popup');
+          for (const file of ['popup.html','popup.css','popup.js','options.html','options.js','background.js','content.js']) {
+            if (!fs.existsSync('extension/' + file)) throw new Error('Missing extension file: ' + file);
+          }
+          console.log('Manifest V3 and extension files validated.');
+          NODE
 
       - name: Build Chrome ZIP
         run: |
