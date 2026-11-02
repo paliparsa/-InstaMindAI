@@ -95,6 +95,8 @@ async function start(){
  await setCheckpoint({scope,queue:queueNames,nextIndex:startAt,updatedAt:new Date().toISOString()});
  for(let i=startAt;i<queue.length;i++){
   if(pauseRequested)break;
+  const latest=await browser.storage.local.get("accounts"),latestNames=new Set((Array.isArray(latest.accounts)?latest.accounts:[]).map(x=>String(x.username||"").toLowerCase()));
+  if(!latestNames.has(String(queue[i].username||"").toLowerCase())){queue.splice(i,1);queueNames.splice(i,1);i--;await setCheckpoint({scope,queue:queueNames,nextIndex:done,updatedAt:new Date().toISOString()});progress(done,queue.length,"Removed unfollowed account — skipped");continue}
   const outcome=await reviewOne(queue[i],i,queue.length);
   if(outcome==="not_found"){
    queue.splice(i,1);queueNames.splice(i,1);i--;done=Math.max(startAt,i+1);
