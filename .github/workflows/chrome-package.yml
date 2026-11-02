@@ -28,6 +28,9 @@ on:
       - "popup.html"
       - "options.html"
       - "popup.css"
+      - "review.html"
+      - "review.js"
+      - "review.css"
       - ".github/workflows/chrome-package.yml"
 
 permissions:
