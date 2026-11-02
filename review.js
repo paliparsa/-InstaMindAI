@@ -96,6 +96,7 @@ async function start(){
  progress(done,queue.length,cancelled?"Stopped":"Review complete");
  say((cancelled?"Stopped. ":"Finished. ")+success+" of "+done+" profiles reviewed successfully. Failed profiles are marked above.",success===0);
 }
+$("settings").addEventListener("click",()=>browser.runtime.openOptionsPage());
 $("start").addEventListener("click",start);
 $("cancel").addEventListener("click",()=>{cancelled=true;$("cancel").disabled=true;say("Stop requested. The current profile will finish first.")});
 $("back").addEventListener("click",event=>{event.preventDefault();browser.tabs.create({url:browser.runtime.getURL("popup.html")})});
