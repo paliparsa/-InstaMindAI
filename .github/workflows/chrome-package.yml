@@ -52,7 +52,7 @@ jobs:
         run: |
           mkdir -p extension dist
           cp chrome/manifest.json extension/manifest.json
-          cp background.js content.js popup.js options.js popup.html options.html popup.css review.html review.js review.css extension/
+          cp background.js content.js popup.js options.js popup.html options.html popup.css review.html review.js review.css accounts.html accounts.js accounts.css extension/
           test -f extension/manifest.json
           node -e "const m=require('./extension/manifest.json'); if(m.manifest_version!==3 || !m.background.service_worker || !m.action) process.exit(1)"
           echo "Chrome extension root:"
