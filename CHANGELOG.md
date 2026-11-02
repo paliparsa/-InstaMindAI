@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 — Optional Gemini Vision review for Firefox and Chrome
+- Added separate Gemini Vision API key and model settings, independent from the text-analysis key.
+- Profile reviews randomly sample up to two currently visible post thumbnails and submit them only when the separate image key is configured and the user has consented.
+- Image review reports only clearly explicit nudity, explicit sexual activity, or overt adult-content promotion; ordinary fashion, swimwear, fitness, beauty, and non-explicit poses are not flags.
+- Added image findings and sampled-image status to review results; vision flags require confidence of at least 0.65 for the combined review marker.
+- Re-asks for consent because image thumbnails are a new data category.
+- No gender, age, identity, or other sensitive-trait inference from faces, images, names, or usernames.
+
 ## 0.3.0 — Automated review queue for Firefox and Chrome
 - Added a dedicated Review action beside each account, separate from Open.
 - Added a review dashboard that opens collected profiles one at a time in background tabs, analyzes them with Gemini, records progress, and supports stopping after the current profile.
@@ -33,4 +41,3 @@
 - Optional Gemini analysis of the currently open profile.
 - Local search, Keep/Review labels, CSV and JSON export.
 - Manual-only account decisions and privacy boundaries.
-
