@@ -13,6 +13,9 @@ Firefox WebExtension for reviewing Instagram accounts you follow. The same codeb
 - Review results show sampled image findings and distinguish skipped image review from completed analysis.
 - No automated likes, follows, messages, or unfollows.
 
+## Model priority lists and rate-limit fallback
+In Settings, manage separate ordered lists for text and image models. Add, edit, remove, or drag models to reorder them; move-up/move-down controls are also available. Models are attempted from top to bottom. When Gemini returns a rate-limit/quota response (HTTP 429 or RESOURCE_EXHAUSTED), that model is temporarily cooled down for 60 seconds and the next available model is tried. Existing single-model settings migrate to a one-item list automatically. The API keys remain separate for text and image analysis.
+
 ## Child-suitability image screening
 The optional Gemini Vision review now checks up to two randomly sampled visible post thumbnails for revealing swimwear, underwear, visible cleavage or exposed chest, exposed upper thighs, partial exposure, nudity, explicit sexual activity, and adult promotion. These are conservative manual-review warnings, not conclusions about a person. The model must not infer gender, identity, age, or other personal traits. Only sampled thumbnails are checked, so results are not exhaustive and should be verified manually.
 

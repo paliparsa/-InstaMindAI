@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0 — Ordered model pools and rate-limit fallback
+- Added editable text and image model priority lists with add, edit, delete, drag-to-reorder, and accessible move-up/move-down controls.
+- Model lists are tried from top to bottom and stored locally; existing single-model settings migrate automatically.
+- On Gemini HTTP 429 / RESOURCE_EXHAUSTED / quota-rate-limit responses, the affected model is cooled down for 60 seconds and the next available model is tried automatically.
+- The selected model and fallback path are recorded with review results.
+- Kept text and image API keys separate and model lists independent.
+- Bumped Chrome and Firefox extension versions to 0.7.0.
+
+
 ## 0.6.0 — Review, account management and popup fixes
 - Added conservative image-based child-suitability warnings for revealing swimwear, underwear, visible chest/cleavage, exposed upper thighs, partial exposure, nudity and adult content.
 - Added individual account deletion and a confirmed delete-all action.
