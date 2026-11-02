@@ -57,3 +57,10 @@ Use restrained 7–9px corner radii, 1px charcoal borders, flat black surfaces, 
 
 ## Accessibility
 Use native buttons and form controls, visible focus, text labels for status, keyboard operation, and reduced-motion support. Preserve a stable 420 × 600 desktop popup and responsive full-tab layouts.
+
+
+## Relationship status system (0.8.2)
+- Canonical states across Popup, Account Manager, and Review: `following`, `unfollowed`, `pending_verification`.
+- Semantic colors: Following = green, Unfollowed = red, Pending verification = amber. Always display the text label as well as color.
+- Open extension pages subscribe to `browser.storage.onChanged` and refresh from the shared local `accounts` records.
+- Prune an account only after an explicit Instagram unavailable/not-found message. Private accounts, login walls, transient failures, and ambiguous empty pages must never be treated as deleted.
