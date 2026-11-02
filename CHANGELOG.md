@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.3 — Recover content-script messaging and large local storage
+- Automatically inject the Instagram reader when an already-open tab has no receiving content-script listener, then retry the requested action.
+- Prevent duplicate content-script message listeners when the reader is injected more than once.
+- Improve recovery/error messages for Instagram tab connection failures.
+- Add `unlimitedStorage` permission so large imported account libraries are not constrained by the default extension storage quota.
+- Apply the same reader-injection recovery to one-by-one profile review.
+
 ## 0.7.2 — Instagram JSON import compatibility and large-file handling
 - Recognize Instagram's official `/ _u / username` export links (for example, `https://www.instagram.com/_u/username`) as account URLs.
 - Keep support for `relationships_following`, `relationships_followers`, nested exports, and InstaMind exports.

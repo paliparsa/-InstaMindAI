@@ -1,6 +1,8 @@
 /* global browser, chrome */
 globalThis.browser = globalThis.browser || globalThis.chrome;
 (() => {
+  if(globalThis.__instaMindContentListenerInstalled)return;
+  globalThis.__instaMindContentListenerInstalled=true;
   const base="https://www.instagram.com/";
   function username(href){
     try{const u=new URL(href,location.origin),p=u.pathname.split("/").filter(Boolean);if(u.origin!==location.origin||p.length!==1)return null;const s=p[0],reserved=["accounts","about","explore","direct","reels","stories","p","developer","legal","web"];return reserved.includes(s.toLowerCase())||! /^[a-zA-Z0-9._]{1,30}$/.test(s)?null:s}catch(_){return null}

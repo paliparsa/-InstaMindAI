@@ -5,7 +5,24 @@ async function load(){const d=await browser.storage.local.get("accounts");record
 $("manageAccounts").onclick=()=>browser.tabs.create({url:browser.runtime.getURL("accounts.html")});
 async function save(){await browser.storage.local.set({accounts:records});render()}
 function status(t,err=false){$("status").textContent=t;$("status").style.color=err?"#ff9292":""}
-async function send(msg){const [tab]=await browser.tabs.query({active:true,currentWindow:true});if(!tab?.id||!tab.url?.startsWith("https://www.instagram.com/"))throw Error("Open Instagram in the active tab first.");return browser.tabs.sendMessage(tab.id,msg)}
+async function send(msg){
+ const [tab]=await browser.tabs.query({active:true,currentWindow:true});
+ if(!tab?.id||!/^https:\/\/www\.instagram\.com\//i.test(tab.url||""))throw Error("Open instagram.com in the active tab first, then try again.");
+ let firstError=null;
+ try{return await browser.tabs.sendMessage(tab.id,msg)}catch(error){firstError=error}
+ let injected=false,injectionError=null;
+ try{
+  if(browser.scripting?.executeScript){await browser.scripting.executeScript({target:{tabId:tab.id},files:["content.js"]});injected=true}
+  else if(browser.tabs?.executeScript){await browser.tabs.executeScript(tab.id,{file:"content.js"});injected=true}
+ }catch(error){injectionError=error}
+ if(!injected){
+  const detail=injectionError?.message||firstError?.message||"Content script could not be injected.";
+  throw Error("InstaMind could not connect to this Instagram tab. Reload the Instagram page and try again. If this is a restricted page or browser profile, open a normal instagram.com tab. Details: "+detail)
+ }
+ await new Promise(resolve=>setTimeout(resolve,150));
+ try{return await browser.tabs.sendMessage(tab.id,msg)}
+ catch(error){throw Error("InstaMind was injected, but Instagram did not respond. Reload the Instagram tab and try again. Details: "+(error?.message||"No receiving listener."))}
+}
 function profileUrl(x){return "https://www.instagram.com/"+encodeURIComponent(x.username)+"/"}
 function openReview(query){const url=browser.runtime.getURL("review.html"+query);browser.tabs.create({url})}
 function render(){

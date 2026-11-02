@@ -24,5 +24,7 @@ jobs:
           node --check accounts.js
           node --check options.js
           node --check review.js
+      - name: Test content-script messaging
+        run: node tests/content-script.test.js
       - name: Test Instagram JSON import
         run: node tests/instagram-import.test.js
