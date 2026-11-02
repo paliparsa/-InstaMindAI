@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — Automated review queue for Firefox and Chrome
+- Added a dedicated Review action beside each account, separate from Open.
+- Added a review dashboard that opens collected profiles one at a time in background tabs, analyzes them with Gemini, records progress, and supports stopping after the current profile.
+- Added evidence-based flags for profiles with no visible follow-back badge plus explicit text-based content signals; missing badge is explicitly marked as uncertain.
+- Added explicit consent before sending visible profile text to Gemini and added profile-loading retries.
+- Profile URLs are now rebuilt from validated usernames to avoid malformed saved URLs.
+- No gender or sensitive-trait inference; no likes, follows, messages, or unfollows.
+
 ## Chrome package — Manifest V3
 - Added a dedicated Chrome manifest at `chrome/manifest.json` with MV3 service worker and action configuration.
 - Added a separate GitHub Actions workflow that builds and validates `instamind-ai-chrome.zip`.
