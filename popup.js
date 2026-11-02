@@ -1,7 +1,8 @@
 /* global browser, chrome */
 globalThis.browser = globalThis.browser || globalThis.chrome;
 const $=id=>document.getElementById(id);let records=[];
-async function load(){const d=await browser.storage.local.get("accounts");records=Array.isArray(d.accounts)?d.accounts:[];render()}\n$("manageAccounts").onclick=()=>browser.tabs.create({url:browser.runtime.getURL("accounts.html")});
+async function load(){const d=await browser.storage.local.get("accounts");records=Array.isArray(d.accounts)?d.accounts:[];render()}
+$("manageAccounts").onclick=()=>browser.tabs.create({url:browser.runtime.getURL("accounts.html")});
 async function save(){await browser.storage.local.set({accounts:records});render()}
 function status(t,err=false){$("status").textContent=t;$("status").style.color=err?"#ff9292":""}
 async function send(msg){const [tab]=await browser.tabs.query({active:true,currentWindow:true});if(!tab?.id||!tab.url?.startsWith("https://www.instagram.com/"))throw Error("Open Instagram in the active tab first.");return browser.tabs.sendMessage(tab.id,msg)}
