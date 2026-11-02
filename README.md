@@ -64,7 +64,7 @@ MIT
 ## Review queue and relationship tracking (0.8.1)
 - Added per-result Open profile and Mark as unfollowed actions. Marking is manual and updates only the local account library; it never clicks Instagram controls.
 - Added optional current Following snapshot sync when importing the official `following.json` export. Accounts missing from the latest snapshot lose the Following relation and are labelled as absent from the export, not assumed to have unfollowed you.
-- The extension does not read Instagram session cookies, scrape the authenticated Following page, or collect credentials. Use Instagram's official data download to refresh the local relationship snapshot.
+- The extension does not read Instagram session cookies, crawl the full Following list automatically, or collect credentials. The existing visible-page collection remains user-triggered; use Instagram's official data download to refresh the complete local relationship snapshot.
 
 ## Previous review queue improvements (0.8.0)
 - Pause after the current profile and resume later from the next account. The queue checkpoint is stored locally and survives closing the review tab.
