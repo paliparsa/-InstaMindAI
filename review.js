@@ -8,6 +8,7 @@ function say(message,error=false){$("status").textContent=message;$("status").cl
 function safeProfileUrl(username){if(!/^[a-zA-Z0-9._]{1,30}$/.test(username||""))throw Error("Invalid Instagram username.");return "https://www.instagram.com/"+encodeURIComponent(username)+"/"}
 function addText(parent,tag,className,value){const node=document.createElement(tag);if(className)node.className=className;node.textContent=value??"";parent.append(node);return node}
 function addTag(parent,label,kind="neutral"){return addText(parent,"span","result-tag "+kind,label)}
+function relationshipState(record){const rel=Array.isArray(record.relationshipTypes)?record.relationshipTypes:[];if(["unfollowed","unfollowed_manually"].includes(record.followingStatus))return "unfollowed";if(["pending_verification","not_in_latest_snapshot"].includes(record.followingStatus))return "pending_verification";if(record.followingStatus==="following"||rel.includes("following"))return "following";return "pending_verification"}
 function renderResult(record,state="Reviewed",error=false){
  const row=document.createElement("article");row.className="result-card";
  const top=document.createElement("div");top.className="result-top";
@@ -38,11 +39,10 @@ function renderResult(record,state="Reviewed",error=false){
  if(vision?.result?.imageFindings?.length){const section=document.createElement("section");section.className="result-section";addText(section,"h4","","Sampled image findings");vision.result.imageFindings.forEach(f=>{const item=document.createElement("div");item.className="finding";addText(item,"strong","",String(f.classification||"Finding").replaceAll("_"," "));addText(item,"p","",f.evidence||"No visual evidence description was returned.");if(f.confidence!=null)addText(item,"small","","Confidence "+Math.round(Number(f.confidence)*100)+"%");section.append(item)});row.append(section)}
  else if(vision?.skipped)addText(row,"p","result-note","Image review skipped: "+(vision.reason||"not configured"));
  else if(vision?.error||vision?.ok===false)addText(row,"p","result-note","Image review unavailable: "+(vision.error||"unknown error"));
- if(record.followingStatus==="unfollowed_manually")addTag(details,"Manually marked unfollowed","positive");
- else if(record.followingStatus==="not_in_latest_snapshot")addTag(details,"Not in latest Following export","warning");
+ const relationship=relationshipState(record),relationshipTag=addTag(details,relationship==="following"?"Following":relationship==="unfollowed"?"Unfollowed":"Pending verification",relationship);relationshipTag.classList.add("relationship-state");relationshipTag.title=relationship==="following"?"هنوز فالو می‌کنی.":relationship==="unfollowed"?"آنفالو شده.":"هنوز وضعیت نهایی تأیید نشده.";
  const actions=document.createElement("div");actions.className="result-actions";
  const open=document.createElement("button");open.type="button";open.className="secondary";open.textContent="Open profile";open.addEventListener("click",()=>browser.tabs.create({url:safeProfileUrl(record.username),active:true}));actions.append(open);
- const marked=record.followingStatus==="unfollowed_manually";
+ const marked=relationshipState(record)==="unfollowed";
  const mark=document.createElement("button");mark.type="button";mark.className="secondary"+(marked?" marked":"");mark.textContent=marked?"Marked unfollowed":"Mark as unfollowed";mark.title=marked?"This account is marked as manually unfollowed in your local list":"Use after you unfollow this account yourself on Instagram";mark.disabled=marked;mark.addEventListener("click",()=>markUnfollowed(record.username,mark,details));actions.append(mark);
  row.append(actions);$("results").append(row);
 }
@@ -50,21 +50,24 @@ function progress(done,total,label){const percent=total?Math.round(done/total*10
 async function requestConsent(){const saved=await browser.storage.local.get("aiReviewConsentV2");if(saved.aiReviewConsentV2)return true;if(!$("consent").checked){say("Tick the consent box before sending profile text or sampled images to Gemini.",true);return false}let allowed=true;try{allowed=await browser.permissions.request({data_collection:["websiteContent"]})}catch(_){allowed=true}if(allowed)await browser.storage.local.set({aiReviewConsentV2:true});return allowed}
 async function waitForTab(tabId){for(let i=0;i<100;i++){let tab;try{tab=await browser.tabs.get(tabId)}catch(_){throw Error("The profile tab was closed before it loaded.")}if(tab.status==="complete")return;await wait(400)}throw Error("Instagram took too long to load this profile.")}
 async function injectProfileReader(tabId){try{if(browser.scripting?.executeScript){await browser.scripting.executeScript({target:{tabId},files:["content.js"]});return true}if(browser.tabs?.executeScript){await browser.tabs.executeScript(tabId,{file:"content.js"});return true}}catch(error){return {ok:false,error:error?.message||"Script injection failed."}}return false}
-async function readProfile(tabId,expectedUsername){let injected=false;for(let i=0;i<25;i++){try{let response;try{response=await browser.tabs.sendMessage(tabId,{type:"READ_PROFILE"})}catch(_){if(!injected){const injection=await injectProfileReader(tabId);injected=injection===true;if(!injected&&injection?.error)throw Error("Could not inject the Instagram reader: "+injection.error);await wait(500)}response=await browser.tabs.sendMessage(tabId,{type:"READ_PROFILE"})}const profile=response?.profile;if(profile?.username&&(!expectedUsername||profile.username.toLowerCase()===expectedUsername.toLowerCase())){if((profile.visibleText||"").length>20||i>=5)return profile}}catch(_){}await wait(800)}throw Error("Instagram profile did not become readable. Confirm you are signed in and the profile is accessible to your account.")}
+async function readProfile(tabId,expectedUsername){let injected=false;for(let i=0;i<25;i++){try{let response;try{response=await browser.tabs.sendMessage(tabId,{type:"READ_PROFILE"})}catch(_){if(!injected){const injection=await injectProfileReader(tabId);injected=injection===true;if(!injected&&injection?.error)throw Error("Could not inject the Instagram reader: "+injection.error);await wait(500)}response=await browser.tabs.sendMessage(tabId,{type:"READ_PROFILE"})}const profile=response?.profile;if(profile?.profileStatus==="not_found")return profile;if(profile?.username&&(!expectedUsername||profile.username.toLowerCase()===expectedUsername.toLowerCase())){if((profile.visibleText||"").length>20||i>=5)return profile}}catch(_){}await wait(800)}throw Error("Instagram profile did not become readable. Confirm you are signed in and the profile is accessible to your account.")}
 async function persist(record){const current=await browser.storage.local.get("accounts"),list=Array.isArray(current.accounts)?current.accounts:[],idx=list.findIndex(x=>x.username?.toLowerCase()===record.username.toLowerCase());if(idx>=0)list[idx]={...list[idx],...record};else list.unshift(record);await browser.storage.local.set({accounts:list})}
 async function markUnfollowed(username,button,details){
  const data=await browser.storage.local.get("accounts"),list=Array.isArray(data.accounts)?data.accounts:[],idx=list.findIndex(x=>String(x.username||"").toLowerCase()===username.toLowerCase());
  if(idx<0){say("This account is no longer in your local account list.",true);return}
  const current=list[idx],relations=Array.isArray(current.relationshipTypes)?current.relationshipTypes:[];
- list[idx]={...current,relationshipTypes:relations.filter(x=>x!=="following"),followingStatus:"unfollowed_manually",followingStatusUpdatedAt:new Date().toISOString()};
+ list[idx]={...current,relationshipTypes:relations.filter(x=>x!=="following"),followingStatus:"unfollowed",followingStatusUpdatedAt:new Date().toISOString()};
  await browser.storage.local.set({accounts:list});
  button.textContent="Marked unfollowed";button.disabled=true;button.classList.add("marked");button.title="Saved locally as manually unfollowed";
- addTag(details,"Manually marked unfollowed","positive");
- say("@"+username+" marked as manually unfollowed. This only updates your local list; Instagram was not changed by InstaMind.");
+ details.querySelectorAll(".relationship-state").forEach(n=>n.remove());const stateTag=addTag(details,"Unfollowed","unfollowed");stateTag.classList.add("relationship-state");
+ say("@"+username+" marked as unfollowed. The local status is now synchronized across the extension.");
 }
+async function removeMissingProfile(username){const data=await browser.storage.local.get("accounts"),list=Array.isArray(data.accounts)?data.accounts:[];await browser.storage.local.set({accounts:list.filter(x=>String(x.username||"").toLowerCase()!==username.toLowerCase())})}
 async function reviewOne(record,index,total){
  let tab=null;try{
   say("Opening @"+record.username+" ("+(index+1)+" of "+total+")…");tab=await browser.tabs.create({url:safeProfileUrl(record.username),active:false});await waitForTab(tab.id);const profile=await readProfile(tab.id,record.username);
+  if(profile.profileStatus==="not_found"){await removeMissingProfile(record.username);say("@"+record.username+" does not exist. Removed from the account list; skipped without AI analysis.");return "not_found"}
+  if(profile.profileStatus==="unavailable"){const pending={...record,followingStatus:"pending_verification",reviewError:"Instagram did not show enough profile content to verify this account. Skipped without AI analysis.",lastCheckedAt:new Date().toISOString()};await persist(pending);renderResult(pending,"Pending verification");say("@"+record.username+" could not be verified from the visible page. Skipped without AI analysis.");return "unavailable"}
   say("Analyzing profile text for @"+record.username+"…");const result=await browser.runtime.sendMessage({type:"AI_ANALYZE",profile});if(!result?.ok)throw Error(result?.error||"Text analysis failed.");
   let vision={skipped:true,reason:"Separate image model is not configured."};const cfg=await browser.storage.local.get(["visionApiKey","visionModel"]);if(cfg.visionApiKey&&profile.visiblePostImages?.length){say("Checking up to two sampled post images for @"+record.username+"…");vision=await browser.runtime.sendMessage({type:"AI_ANALYZE_IMAGES",profile})||{ok:false,error:"No response from image model"}}
   const followBackStatus=profile.followsYouEvidence?"follows_you":((profile.visibleText||"").length>20?"not_detected":"unknown"),contentFlags=Array.isArray(result.result?.contentFlags)?result.result.contentFlags:[],imageFindings=Array.isArray(vision?.result?.imageFindings)?vision.result.imageFindings:[],imageFlags=vision?.result?.overallFlag===true||vision?.result?.childSuitability==="potentially_not_child_suitable"||imageFindings.some(f=>["partial_exposure","visible_bare_legs","revealing_clothing","bikini_swimwear","cleavage_or_exposed_chest","exposed_upper_thighs","underwear_or_lingerie","nudity","explicit_sexual_activity","adult_promotion","needs_manual_review","explicit_nudity"].includes(f.classification)&&Number(f.confidence)>=0.5)||false;
@@ -75,6 +78,7 @@ async function reviewOne(record,index,total){
 }
 function scopeKey(one){return one?"one:"+one.toLowerCase():"all"}
 async function setCheckpoint(value){await browser.storage.local.set({[CHECKPOINT_KEY]:value})}
+browser.storage.onChanged?.addListener((changes,area)=>{if(area!=="local"||!changes.accounts||!Array.isArray(changes.accounts.newValue))return;const map=new Map(changes.accounts.newValue.map(x=>[String(x.username||"").toLowerCase(),x]));document.querySelectorAll(".result-card").forEach(card=>{const username=card.querySelector(".result-username")?.textContent?.replace(/^@/,"").toLowerCase();if(!username)return;const record=map.get(username);if(!record){card.remove();return}const state=relationshipState(record),tag=card.querySelector(".relationship-state");if(tag){tag.textContent=state==="following"?"Following":state==="unfollowed"?"Unfollowed":"Pending verification";tag.classList.remove("following","unfollowed","pending_verification");tag.classList.add(state)}const mark=card.querySelector(".result-actions button:last-child");if(mark){mark.textContent=state==="unfollowed"?"Marked unfollowed":"Mark as unfollowed";mark.disabled=state==="unfollowed";mark.classList.toggle("marked",state==="unfollowed")}})});
 async function start(){
  if(running)return;
  const cfg=await browser.storage.local.get(["apiKey","accounts",CHECKPOINT_KEY]);if(!cfg.apiKey){say("Add your text-analysis Gemini API key in Settings before starting.",true);return}
@@ -82,7 +86,7 @@ async function start(){
  if(checkpoint&&checkpoint.scope!==scope){say("Another review queue is paused. Resume it from its original Review page before starting a different queue.",true);return}
  let queue=[],startAt=0;
  if(checkpoint&&checkpoint.scope===scope&&Array.isArray(checkpoint.queue)){
-  const byName=new Map(records.map(x=>[String(x.username||"").toLowerCase(),x]));queue=checkpoint.queue.map(name=>byName.get(String(name).toLowerCase())).filter(Boolean);startAt=Math.min(Number(checkpoint.nextIndex)||0,queue.length);
+  const byName=new Map(records.map(x=>[String(x.username||"").toLowerCase(),x]));const checkpointIndex=Math.max(0,Number(checkpoint.nextIndex)||0);startAt=checkpoint.queue.slice(0,checkpointIndex).filter(name=>byName.has(String(name).toLowerCase())).length;queue=checkpoint.queue.map(name=>byName.get(String(name).toLowerCase())).filter(Boolean);startAt=Math.min(startAt,queue.length);
  }
  if(!queue.length){queue=one?records.filter(x=>x.username?.toLowerCase()===one.toLowerCase()):records.slice();startAt=0}
  if(one&&!queue.length){say("This account is not in your collected list.",true);return}if(!queue.length){say("No accounts to review. Collect your Following list first.",true);return}
@@ -93,7 +97,13 @@ async function start(){
  await setCheckpoint({scope,queue:queueNames,nextIndex:startAt,updatedAt:new Date().toISOString()});
  for(let i=startAt;i<queue.length;i++){
   if(pauseRequested)break;
-  const ok=await reviewOne(queue[i],i,queue.length);if(ok)success++;done=i+1;
+  const outcome=await reviewOne(queue[i],i,queue.length);
+  if(outcome==="not_found"){
+   queue.splice(i,1);queueNames.splice(i,1);i--;done=Math.max(startAt,i+1);
+   await setCheckpoint({scope,queue:queueNames,nextIndex:done,updatedAt:new Date().toISOString()});
+   progress(done,queue.length,"Missing profile removed — skipped");continue;
+  }
+  if(outcome===true)success++;done=i+1;
   await setCheckpoint({scope,queue:queueNames,nextIndex:done,updatedAt:new Date().toISOString()});
   progress(done,queue.length,pauseRequested?"Pausing":"Reviewing accounts");
   if(i<queue.length-1&&!pauseRequested)await wait(2500);

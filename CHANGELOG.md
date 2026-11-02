@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.2 — Global relationship states and missing-profile pruning
+- Popup, Account Manager, and Review share the same local relationship states: Following, Unfollowed, and Pending verification.
+- Live storage listeners refresh open extension pages after a status change; counts, filters, and status chips stay synchronized.
+- Added green Following, red Unfollowed, and amber Pending verification labels.
+- Review checks for explicit Instagram unavailable/not-found page messages before calling Gemini. Confirmed missing profiles are removed from the local list and skipped without text or image analysis tokens.
+- Missing-profile removal updates the saved review checkpoint so resume continues at the next account. Ambiguous, private, or inaccessible profiles are not deleted.
+- Bumped Firefox and Chrome extension versions to 0.8.2.
+
+
 ## 0.8.1 — Manual unfollow status and Following snapshot sync
 - Replaced the duplicate “Unfollow manually” profile-opening shortcut with a local “Mark as unfollowed” action on every review result, alongside “Open profile”.
 - Manual marking removes the Following relation from the local account record and records a timestamp; it does not interact with Instagram.

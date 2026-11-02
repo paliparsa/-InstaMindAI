@@ -1,5 +1,11 @@
 # InstaMind AI
 
+## Global relationship status and missing profiles (0.8.2)
+- Popup, Account Manager, and Review use a shared local status for each account: **Following**, **Unfollowed**, or **Pending verification**. Changes update other open extension pages automatically.
+- Status chips are color-coded consistently: green, red, and amber respectively.
+- During Review, an account is removed from the local library only when Instagram displays a clear unavailable/not-found message. It is skipped before Gemini is called, so it consumes no AI tokens. Private profiles, login walls, and ambiguous loading failures are not treated as missing.
+
+
 Firefox WebExtension for reviewing Instagram accounts you follow. The same codebase includes a mobile-friendly interface and packaging for **Firefox on Android**, plus a separate **Chrome Manifest V3** build.
 
 ## Features
