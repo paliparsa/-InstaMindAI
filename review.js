@@ -25,8 +25,9 @@ function renderResult(record,state="Reviewed",error=false){
 }
 function progress(done,total,label){$("progressTitle").textContent=label;$("progressCount").textContent=done+" / "+total;$("progressBar").style.width=(total?Math.round(done/total*100):0)+"%"}
 async function requestConsent(){
+ if(!$("consent").checked){say("Tick the consent box before sending profile data to Gemini.",true);return false}
  try{return await browser.permissions.request({data_collection:["websiteContent"]})}
- catch(_){return window.confirm("The visible Instagram profile text and metadata for each account will be sent to Google Gemini using your API key. Continue?")}
+ catch(_){return true}
 }
 async function waitForTab(tabId){
  for(let i=0;i<100;i++){
@@ -38,9 +39,8 @@ async function waitForTab(tabId){
 }
 async function readProfile(tabId){
  for(let i=0;i<12;i++){
-  const response=await browser.tabs.sendMessage(tabId,{type:"READ_PROFILE"});
-  if(response?.profile&&response.profile.username&&(response.profile.visibleText||"").length>20)return response.profile;
-  await wait(700);
+  try{const response=await browser.tabs.sendMessage(tabId,{type:"READ_PROFILE"});if(response?.profile&&response.profile.username&&(response.profile.visibleText||"").length>20)return response.profile}catch(_){}
+  await wait(900);
  }
  throw Error("Profile content did not load. Check that Instagram is signed in and the account is available.");
 }
