@@ -1,7 +1,7 @@
 /* global browser, chrome */
 globalThis.browser = globalThis.browser || globalThis.chrome;
 const $=id=>document.getElementById(id);let records=[];
-function relationshipState(record){const rel=Array.isArray(record.relationshipTypes)?record.relationshipTypes:[];if(["unfollowed","unfollowed_manually"].includes(record.followingStatus))return "unfollowed";if(record.followingStatus==="following"||rel.includes("following"))return "following";return "pending_verification"}
+function relationshipState(record){const rel=Array.isArray(record.relationshipTypes)?record.relationshipTypes:[];if(["unfollowed","unfollowed_manually"].includes(record.followingStatus))return "unfollowed";if(["pending_verification","not_in_latest_snapshot"].includes(record.followingStatus))return "pending_verification";if(record.followingStatus==="following"||rel.includes("following"))return "following";return "pending_verification"}
 function relationshipLabel(state){return state==="following"?"Following":state==="unfollowed"?"Unfollowed":"Pending verification"}
 async function load(){const d=await browser.storage.local.get("accounts");records=Array.isArray(d.accounts)?d.accounts:[];render()}
 browser.storage.onChanged?.addListener((changes,area)=>{if(area==="local"&&changes.accounts){records=Array.isArray(changes.accounts.newValue)?changes.accounts.newValue:[];render()}});
