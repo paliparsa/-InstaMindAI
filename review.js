@@ -42,7 +42,7 @@ function renderResult(record,state="Reviewed",error=false){
  const relationship=relationshipState(record),relationshipTag=addTag(details,relationship==="following"?"Following":relationship==="unfollowed"?"Unfollowed":"Pending verification",relationship);relationshipTag.classList.add("relationship-state");
  const actions=document.createElement("div");actions.className="result-actions";
  const open=document.createElement("button");open.type="button";open.className="secondary";open.textContent="Open profile";open.addEventListener("click",()=>browser.tabs.create({url:safeProfileUrl(record.username),active:true}));actions.append(open);
- const marked=record.followingStatus==="unfollowed_manually";
+ const marked=relationshipState(record)==="unfollowed";
  const mark=document.createElement("button");mark.type="button";mark.className="secondary"+(marked?" marked":"");mark.textContent=marked?"Marked unfollowed":"Mark as unfollowed";mark.title=marked?"This account is marked as manually unfollowed in your local list":"Use after you unfollow this account yourself on Instagram";mark.disabled=marked;mark.addEventListener("click",()=>markUnfollowed(record.username,mark,details));actions.append(mark);
  row.append(actions);$("results").append(row);
 }
@@ -59,7 +59,7 @@ async function markUnfollowed(username,button,details){
  list[idx]={...current,relationshipTypes:relations.filter(x=>x!=="following"),followingStatus:"unfollowed",followingStatusUpdatedAt:new Date().toISOString()};
  await browser.storage.local.set({accounts:list});
  button.textContent="Marked unfollowed";button.disabled=true;button.classList.add("marked");button.title="Saved locally as manually unfollowed";
- details.querySelectorAll(".result-tag.following,.result-tag.pending_verification").forEach(n=>n.remove());addTag(details,"Unfollowed","unfollowed");
+ details.querySelectorAll(".relationship-state").forEach(n=>n.remove());const stateTag=addTag(details,"Unfollowed","unfollowed");stateTag.classList.add("relationship-state");
  say("@"+username+" marked as unfollowed. The local status is now synchronized across the extension.");
 }
 async function removeMissingProfile(username){const data=await browser.storage.local.get("accounts"),list=Array.isArray(data.accounts)?data.accounts:[];await browser.storage.local.set({accounts:list.filter(x=>String(x.username||"").toLowerCase()!==username.toLowerCase())})}
