@@ -1,4 +1,5 @@
-/* global browser */
+/* global browser, chrome */
+globalThis.browser = globalThis.browser || globalThis.chrome;
 (() => {
   const base="https://www.instagram.com/";
   function username(href){
