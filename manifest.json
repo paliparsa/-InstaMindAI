@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "InstaMind AI",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A privacy-conscious assistant for reviewing Instagram accounts you follow on Firefox desktop and Android.",
   "permissions": [
     "activeTab",
