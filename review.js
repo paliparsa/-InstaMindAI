@@ -8,7 +8,7 @@ function say(message,error=false){$("status").textContent=message;$("status").cl
 function safeProfileUrl(username){if(!/^[a-zA-Z0-9._]{1,30}$/.test(username||""))throw Error("Invalid Instagram username.");return "https://www.instagram.com/"+encodeURIComponent(username)+"/"}
 function addText(parent,tag,className,value){const node=document.createElement(tag);if(className)node.className=className;node.textContent=value??"";parent.append(node);return node}
 function addTag(parent,label,kind="neutral"){return addText(parent,"span","result-tag "+kind,label)}
-function relationshipState(record){const rel=Array.isArray(record.relationshipTypes)?record.relationshipTypes:[];if(["unfollowed","unfollowed_manually"].includes(record.followingStatus))return "unfollowed";if(record.followingStatus==="following"||rel.includes("following"))return "following";return "pending_verification"}
+function relationshipState(record){const rel=Array.isArray(record.relationshipTypes)?record.relationshipTypes:[];if(["unfollowed","unfollowed_manually"].includes(record.followingStatus))return "unfollowed";if(["pending_verification","not_in_latest_snapshot"].includes(record.followingStatus))return "pending_verification";if(record.followingStatus==="following"||rel.includes("following"))return "following";return "pending_verification"}
 function renderResult(record,state="Reviewed",error=false){
  const row=document.createElement("article");row.className="result-card";
  const top=document.createElement("div");top.className="result-top";
