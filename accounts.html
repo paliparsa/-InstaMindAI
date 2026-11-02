@@ -12,7 +12,8 @@
 <section class="import-panel" aria-labelledby="importTitle">
 <div class="import-copy"><strong id="importTitle">Import Instagram JSON</strong><p>Choose one or more JSON files from your Instagram download, or an InstaMind JSON export. Existing accounts and review notes are preserved.</p></div>
 <div class="import-controls"><label class="file-pick" for="jsonFiles">Choose JSON files</label><input id="jsonFiles" type="file" accept=".json,application/json" multiple><span id="fileNames" class="file-names">No files selected</span><button id="import" class="secondary" disabled>Import selected</button></div>
-<p class="import-hint">Supports followers_1.json, following.json, nested Instagram relationship exports, plain username lists and InstaMind exports. Files are read locally and are not uploaded.</p>
+<label class="snapshot-option"><input id="followingSnapshot" type="checkbox"> Treat following.json as the current Following snapshot</label>
+<p class="import-hint">When enabled, accounts missing from the new following.json lose the Following label and are marked “Not in latest export”. This is a comparison, not proof that someone personally unfollowed you. Files stay on this device.</p>
 </section>
 <section class="manager-stats">
 <div><strong id="total">0</strong><small>Total accounts</small></div>
