@@ -5,13 +5,13 @@ function bytesToBase64(bytes){let binary="";for(let i=0;i<bytes.length;i+=0x8000
 async function analyzeText(profile){
   const cfg=await browser.storage.local.get(["apiKey","model"]);if(!cfg.apiKey)return {ok:false,error:"Add your Gemini text-analysis API key in Settings first."};
   const model=cfg.model||"gemini-2.0-flash",url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(cfg.apiKey);
-  const prompt=[
+  const {visiblePostImages,...textOnlyProfile}=profile||{};\n  const prompt=[
     "Review this Instagram profile using only the supplied visible text and metadata.",
     "Never infer gender, sex, age, ethnicity, religion, sexual orientation, health, or any sensitive trait from a face, photo, name, username, or indirect clue. Never identify a person in an image.",
     "Only report pronouns when explicitly self-described in profile text.",
     "Classify public content themes and account type. Identify potentially adult or sexualized promotional content ONLY when explicitly indicated by supplied bio/caption/text. Do not infer from appearance, clothing, poses, or image descriptions. Do not flag ordinary fashion, fitness, swimwear, or beauty content.",
     "Return valid JSON only with keys: accountType (string), contentCategories (array), bioSummary (string), selfDescribedPronouns (string or null), contentFlags (array; text-evidence only), reviewSignals (array), confidence (number 0-1), limitations (array).",
-    "Visible profile data: "+JSON.stringify(profile||{})
+    "Visible profile data: "+JSON.stringify(textOnlyProfile)
   ].join("\n");
   try{const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,responseMimeType:"application/json"}})}),data=await res.json();if(!res.ok)return {ok:false,error:data?.error?.message||"Gemini text request failed."};const raw=data?.candidates?.[0]?.content?.parts?.[0]?.text;if(!raw)return {ok:false,error:"Empty text-analysis response."};try{return {ok:true,result:JSON.parse(raw)}}catch(_){return {ok:false,error:"Text model returned invalid JSON."}}}catch(e){return {ok:false,error:e.message||"Text-analysis network error."}}
 }
