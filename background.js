@@ -16,7 +16,7 @@ async function requestWithModelFallback(apiKey,models,parts,kind){
   let response,data;
   try{response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0.1,responseMimeType:"application/json"}})});data=await response.json().catch(()=>({}));}
   catch(error){return {ok:false,error:error.message||"Gemini network request failed.",model,rateLimitedModels:rateLimited};}
-  if(response.ok){delete cooldowns[cooldownKey];await browser.storage.local.set({modelCooldowns:cooldowns});return {ok:true,data,model,rateLimitedModels:rateLimited,skippedModels:skipped};}
+  if(response.ok){delete cooldowns[cooldownKey];await browser.storage.local.set({modelCooldowns:cooldowns});const usage=data?.usageMetadata||{};const statsKey="geminiUsageStatsV1",stored=await browser.storage.local.get(statsKey),stats={...(stored[statsKey]||{})},key=kind+":"+model,prior=stats[key]||{requests:0,inputTokens:0,outputTokens:0,totalTokens:0,cachedTokens:0};prior.requests++;prior.inputTokens+=Number(usage.promptTokenCount||0);prior.outputTokens+=Number(usage.candidatesTokenCount||0);prior.totalTokens+=Number(usage.totalTokenCount||0);prior.cachedTokens+=Number(usage.cachedContentTokenCount||0);prior.lastUsedAt=new Date().toISOString();stats[key]=prior;await browser.storage.local.set({[statsKey]:stats});return {ok:true,data,model,usage:{inputTokens:Number(usage.promptTokenCount||0),outputTokens:Number(usage.candidatesTokenCount||0),totalTokens:Number(usage.totalTokenCount||0)},rateLimitedModels:rateLimited,skippedModels:skipped};}
   const message=data?.error?.message||"Gemini request failed.";
   if(isRateLimited(response,data)){rateLimited.push(model);cooldowns[cooldownKey]=Date.now()+60*1000;await browser.storage.local.set({modelCooldowns:cooldowns});continue;}
   return {ok:false,error:message,model,rateLimitedModels:rateLimited,status:response.status};
@@ -38,7 +38,7 @@ async function analyzeText(profile){
  const request=await requestWithModelFallback(cfg.apiKey,models,[{text:prompt}],"text");
  if(!request.ok)return {ok:false,error:request.error,rateLimitedModels:request.rateLimitedModels||[]};
  const raw=request.data?.candidates?.[0]?.content?.parts?.[0]?.text;if(!raw)return {ok:false,error:"Empty text-analysis response.",model:request.model};
- try{return {ok:true,result:JSON.parse(raw),model:request.model,rateLimitedModels:request.rateLimitedModels,skippedModels:request.skippedModels}}catch(_){return {ok:false,error:"Text model returned invalid JSON.",model:request.model}}
+ try{return {ok:true,result:JSON.parse(raw),model:request.model,usage:request.usage||null,rateLimitedModels:request.rateLimitedModels,skippedModels:request.skippedModels}}catch(_){return {ok:false,error:"Text model returned invalid JSON.",model:request.model}}
 }
 async function analyzeImages(profile){
  const cfg=await browser.storage.local.get(["visionApiKey"]);if(!cfg.visionApiKey)return {ok:true,skipped:true,reason:"Vision API key not configured."};
@@ -54,7 +54,7 @@ async function analyzeImages(profile){
   const models=await getModelList("visionModels","visionModel","gemini-2.5-flash"),request=await requestWithModelFallback(cfg.visionApiKey,models,parts,"vision");
   if(!request.ok)return {ok:false,error:request.error,rateLimitedModels:request.rateLimitedModels||[]};
   const raw=request.data?.candidates?.[0]?.content?.parts?.[0]?.text;if(!raw)return {ok:false,error:"Empty vision-analysis response.",model:request.model};
-  try{return {ok:true,result:JSON.parse(raw),sampledImages:parts.filter(p=>p.inlineData).length,model:request.model,rateLimitedModels:request.rateLimitedModels,skippedModels:request.skippedModels}}catch(_){return {ok:false,error:"Vision model returned invalid JSON.",model:request.model}}
+  try{return {ok:true,result:JSON.parse(raw),sampledImages:parts.filter(p=>p.inlineData).length,model:request.model,usage:request.usage||null,rateLimitedModels:request.rateLimitedModels,skippedModels:request.skippedModels}}catch(_){return {ok:false,error:"Vision model returned invalid JSON.",model:request.model}}
  }catch(e){return {ok:false,error:e.message||"Vision-analysis network error."}}
 }
 browser.runtime.onMessage.addListener(async msg=>{if(msg?.type==="AI_ANALYZE")return analyzeText(msg.profile);if(msg?.type==="AI_ANALYZE_IMAGES")return analyzeImages(msg.profile);return undefined});

@@ -33,9 +33,9 @@ Use restrained 7–9px corner radii, 1px charcoal borders, flat black surfaces, 
 
 ## Interaction contract
 - Open navigates only; Review opens the profile in a background tab and analyzes it.
-- Bulk review is sequential, paced, visibly progressing, and stoppable after the current profile.
+- Bulk review is sequential, paced, visibly progressing, pausable after the current profile, and resumable from a locally persisted next-account checkpoint.
 - AI transmission requires explicit user consent.
-- The extension is read-only: it does not like, follow, message, or unfollow.
+- Account actions remain user-controlled: review results can open a profile for a manual unfollow, but the extension does not automate likes, follows, messages, or unfollows.
 - Missing “Follows you” evidence is uncertain, not definitive proof of non-reciprocity.
 - Content flags must cite explicit visible text evidence; never infer sensitive traits from images or names.
 - Keep all data local except profile text the user explicitly consents to send to Gemini.
@@ -52,6 +52,7 @@ Use restrained 7–9px corner radii, 1px charcoal borders, flat black surfaces, 
 - Model rows support direct ID editing, add, remove, pointer drag-and-drop, and keyboard/touch move-up/move-down controls.
 - The priority order is top-to-bottom. Rate-limited Gemini models enter a 60-second cooldown and the next available model is attempted automatically.
 - The settings page displays the actual model selected for each completed profile review and any fallback path.
+- Per-model token totals are accumulated from Gemini response usageMetadata for successful requests made by this extension. The UI must not imply this is the full API-key usage or a remaining-quota balance.
 
 ## Accessibility
 Use native buttons and form controls, visible focus, text labels for status, keyboard operation, and reduced-motion support. Preserve a stable 420 × 600 desktop popup and responsive full-tab layouts.
