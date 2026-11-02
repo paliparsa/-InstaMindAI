@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 — Review, account management and popup fixes
+- Added conservative image-based child-suitability warnings for revealing swimwear, underwear, visible chest/cleavage, exposed upper thighs, partial exposure, nudity and adult content.
+- Added individual account deletion and a confirmed delete-all action.
+- Improved profile loading with longer readiness checks and a content-script injection fallback.
+- Fixed Chrome popup sizing and internal scrolling.
+- Added the Chrome scripting permission for reliable profile reading.
+
+
 ## 0.5.0 — JSON import and paginated account manager
 - Added a dedicated account manager page opened in a new browser tab.
 - Import one or more Instagram followers/following JSON exports or InstaMind JSON exports.
