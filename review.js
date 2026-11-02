@@ -16,10 +16,11 @@ function renderResult(record,state="Reviewed",error=false){
  addText(identity,"strong","result-username","@"+record.username);
  addText(identity,"span","result-date",record.lastReviewedAt?new Date(record.lastReviewedAt).toLocaleString():"");
  const status=addText(top,"span","result-state"+(error?" error":""),state);top.append(identity,status);row.append(top);
+ const compact=document.createElement("details");compact.className="result-expanded";const compactSummary=document.createElement("summary");compactSummary.textContent="@"+record.username+" · Open review details";compact.append(compactSummary);row.append(compact);
  const analysis=record.analysis||{};
- if(analysis.bioSummary)addText(row,"p","result-summary",analysis.bioSummary);
- else if(record.reviewError)addText(row,"p","result-summary",record.reviewError);
- else addText(row,"p","result-summary","No summary was returned for this profile.");
+ if(analysis.bioSummary)addText(compact,"p","result-summary",analysis.bioSummary);
+ else if(record.reviewError)addText(compact,"p","result-summary",record.reviewError);
+ else addText(compact,"p","result-summary","No summary was returned for this profile.");
  const details=document.createElement("div");details.className="result-details";
  if(analysis.accountType)addTag(details,"Account: "+analysis.accountType);
  (analysis.contentCategories||[]).forEach(x=>addTag(details,x,"category"));
@@ -32,19 +33,19 @@ function renderResult(record,state="Reviewed",error=false){
  if(record.analysisModel)addTag(details,"Text model · "+record.analysisModel);
  if(record.visionModel)addTag(details,"Image model · "+record.visionModel);
  if(record.modelFallbacks?.length)addTag(details,"Fallback · "+record.modelFallbacks.join(" → "));
- row.append(details);
+ compact.append(details);
  if((analysis.reviewSignals||[]).length){const evidence=document.createElement("section");evidence.className="result-section";addText(evidence,"h4","","Text evidence");const ul=document.createElement("ul");(analysis.reviewSignals||[]).forEach(x=>addText(ul,"li","",x));evidence.append(ul);row.append(evidence)}
  if((analysis.limitations||[]).length){const limitations=document.createElement("details");limitations.className="result-section";addText(limitations,"summary","","Analysis limitations");const ul=document.createElement("ul");analysis.limitations.forEach(x=>addText(ul,"li","",x));limitations.append(ul);row.append(limitations)}
  const vision=record.visionAnalysis;
  if(vision?.result?.imageFindings?.length){const section=document.createElement("section");section.className="result-section";addText(section,"h4","","Sampled image findings");vision.result.imageFindings.forEach(f=>{const item=document.createElement("div");item.className="finding";addText(item,"strong","",String(f.classification||"Finding").replaceAll("_"," "));addText(item,"p","",f.evidence||"No visual evidence description was returned.");if(f.confidence!=null)addText(item,"small","","Confidence "+Math.round(Number(f.confidence)*100)+"%");section.append(item)});row.append(section)}
- else if(vision?.skipped)addText(row,"p","result-note","Image review skipped: "+(vision.reason||"not configured"));
- else if(vision?.error||vision?.ok===false)addText(row,"p","result-note","Image review unavailable: "+(vision.error||"unknown error"));
+ else if(vision?.skipped)addText(compact,"p","result-note","Image review skipped: "+(vision.reason||"not configured"));
+ else if(vision?.error||vision?.ok===false)addText(compact,"p","result-note","Image review unavailable: "+(vision.error||"unknown error"));
  const relationship=relationshipState(record),relationshipTag=addTag(details,relationship==="following"?"Following":relationship==="unfollowed"?"Unfollowed":"Pending verification",relationship);relationshipTag.classList.add("relationship-state");relationshipTag.title=relationship==="following"?"هنوز فالو می‌کنی.":relationship==="unfollowed"?"آنفالو شده.":"هنوز وضعیت نهایی تأیید نشده.";
  const actions=document.createElement("div");actions.className="result-actions";
  const open=document.createElement("button");open.type="button";open.className="secondary";open.textContent="Open profile";open.addEventListener("click",()=>browser.tabs.create({url:safeProfileUrl(record.username),active:true}));actions.append(open);
  const marked=relationshipState(record)==="unfollowed";
  const mark=document.createElement("button");mark.type="button";mark.className="secondary"+(marked?" marked":"");mark.textContent=marked?"Marked unfollowed":"Mark as unfollowed";mark.title=marked?"This account is marked as manually unfollowed in your local list":"Use after you unfollow this account yourself on Instagram";mark.disabled=marked;mark.addEventListener("click",()=>markUnfollowed(record.username,mark,details));actions.append(mark);
- row.append(actions);$("results").append(row);
+ compact.append(actions);$("results").append(row);
 }
 function progress(done,total,label){const percent=total?Math.round(done/total*100):0;$("progressTitle").textContent=label;$("progressCount").textContent=done+" / "+total;$("progressBar").style.width=percent+"%";$("progressBar").setAttribute("aria-valuenow",String(done));$("progressBar").setAttribute("aria-valuemax",String(total));$("progressPercent").textContent=percent+"%"}
 async function requestConsent(){const saved=await browser.storage.local.get("aiReviewConsentV2");if(saved.aiReviewConsentV2)return true;if(!$("consent").checked){say("Tick the consent box before sending profile text or sampled images to Gemini.",true);return false}let allowed=true;try{allowed=await browser.permissions.request({data_collection:["websiteContent"]})}catch(_){allowed=true}if(allowed)await browser.storage.local.set({aiReviewConsentV2:true});return allowed}
@@ -55,12 +56,9 @@ async function persist(record){const current=await browser.storage.local.get("ac
 async function markUnfollowed(username,button,details){
  const data=await browser.storage.local.get("accounts"),list=Array.isArray(data.accounts)?data.accounts:[],idx=list.findIndex(x=>String(x.username||"").toLowerCase()===username.toLowerCase());
  if(idx<0){say("This account is no longer in your local account list.",true);return}
- const current=list[idx],relations=Array.isArray(current.relationshipTypes)?current.relationshipTypes:[];
- list[idx]={...current,relationshipTypes:relations.filter(x=>x!=="following"),followingStatus:"unfollowed",followingStatusUpdatedAt:new Date().toISOString()};
- await browser.storage.local.set({accounts:list});
- button.textContent="Marked unfollowed";button.disabled=true;button.classList.add("marked");button.title="Saved locally as manually unfollowed";
- details.querySelectorAll(".relationship-state").forEach(n=>n.remove());const stateTag=addTag(details,"Unfollowed","unfollowed");stateTag.classList.add("relationship-state");
- say("@"+username+" marked as unfollowed. The local status is now synchronized across the extension.");
+ await browser.storage.local.set({accounts:list.filter(x=>String(x.username||"").toLowerCase()!==username.toLowerCase())});
+ button.textContent="Marked unfollowed · Removed";button.disabled=true;button.classList.add("marked");
+ say("@"+username+" marked as manually unfollowed and removed from Account Manager.");
 }
 async function removeMissingProfile(username){const data=await browser.storage.local.get("accounts"),list=Array.isArray(data.accounts)?data.accounts:[];await browser.storage.local.set({accounts:list.filter(x=>String(x.username||"").toLowerCase()!==username.toLowerCase())})}
 async function reviewOne(record,index,total){
