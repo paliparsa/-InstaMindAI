@@ -30,7 +30,7 @@ function render(){
  const q=$("search").value.toLowerCase(),f=$("filter").value,root=$("accounts");root.textContent="";
  const list=records.filter(x=>(x.username+" "+(x.displayText||"")+" "+(x.analysis?.contentCategories||[]).join(" ")+" "+(x.analysis?.contentFlags||[]).join(" ")).toLowerCase().includes(q)&&(f==="all"||(f==="follows_you"&&x.followBackStatus==="follows_you")||(f==="doesnt_follow_you"&&x.followBackStatus==="doesnt_follow_you")||(f==="unknown"&&(!x.followBackStatus||x.followBackStatus==="unknown"))||(f==="keep"&&x.status==="keep")||(f==="review"&&x.status!=="keep")||(f==="unreviewed"&&!x.analysis)||(f==="flagged"&&x.flaggedForReview)));
  if(!list.length){const e=document.createElement("div");e.className="empty";e.textContent=records.length?"No matches.":"No accounts yet. Scan Following or collect visible accounts.";root.append(e)}
- list.slice(0,100).forEach(x=>{
+ list.forEach(x=>{
   const row=document.createElement("div");row.className="account";
   if(x.avatarUrl?.startsWith("https://")){const im=document.createElement("img");im.className="avatar";im.src=x.avatarUrl;im.alt="";row.append(im)}else{const av=document.createElement("div");av.className="avatar";av.textContent=(x.username||"?")[0].toUpperCase();row.append(av)}
   const info=document.createElement("div");info.className="info";const n=document.createElement("strong");n.textContent="@"+x.username;const d=document.createElement("small");d.textContent=x.analysis?.contentFlags?.length?"Flagged: "+x.analysis.contentFlags.join(", "):(x.analysis?.contentCategories?.join(" · ")||x.displayText||"Not analyzed");info.append(n,d);row.append(info);
