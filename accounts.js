@@ -39,6 +39,17 @@ function extractJsonAccounts(data,filename){
  }
  return [...foundByUsername.values()];
 }
+function reconcileFollowingSnapshot(existingRecords,incomingRecords,timestamp=new Date().toISOString()){
+ const map=new Map((Array.isArray(existingRecords)?existingRecords:[]).map(x=>[String(x.username||"").toLowerCase(),x]));
+ for(const [key,old] of map){const rel=Array.isArray(old.relationshipTypes)?old.relationshipTypes:[];if(rel.includes("following"))map.set(key,{...old,relationshipTypes:rel.filter(x=>x!=="following"),followingStatus:"not_in_latest_snapshot",followingSnapshotAt:timestamp})}
+ let imported=0,duplicates=0;
+ for(const incoming of (Array.isArray(incomingRecords)?incomingRecords:[])){
+  const key=String(incoming.username||"").toLowerCase();if(!key)continue;const old=map.get(key);
+  if(old){duplicates++;const rel=[...new Set([...(old.relationshipTypes||[]),...(incoming.relationshipTypes||[])])];const merged={...incoming,...old,relationshipTypes:rel,importSources:[...new Set([...(old.importSources||[]),...(incoming.importSources||[])])],avatarUrl:old.avatarUrl||incoming.avatarUrl,displayText:old.displayText||incoming.displayText};if(incoming.relationshipTypes?.includes("following")){merged.followingStatus="following";merged.followingSnapshotAt=timestamp}map.set(key,merged)}
+  else{imported++;const created={...incoming};if(incoming.relationshipTypes?.includes("following")){created.followingStatus="following";created.followingSnapshotAt=timestamp}map.set(key,created)}
+ }
+ return {records:[...map.values()],imported,duplicates};
+}
 function relationLabel(x){const a=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(x.followingStatus==="unfollowed_manually")return a.includes("followers")?"FOLLOWER · UNFOLLOWED":"UNFOLLOWED";if(x.followingStatus==="not_in_latest_snapshot")return a.includes("followers")?"FOLLOWER · NOT IN EXPORT":"NOT IN LATEST EXPORT";if(a.includes("followers")&&a.includes("following"))return "FOLLOWER + FOLLOWING";if(a.includes("followers"))return "FOLLOWER";if(a.includes("following"))return "FOLLOWING";return "IMPORTED"}
 function profileUrl(x){return "https://www.instagram.com/"+encodeURIComponent(x.username)+"/"}
 function openReview(query){browser.tabs.create({url:browser.runtime.getURL("review.html"+query)})}
@@ -81,20 +92,19 @@ async function importFiles(files){
    incomingAll.push(...parsed);
   }catch(e){failed.push(file.name+": "+(e.message||"invalid JSON"))}
  }
- const map=new Map(records.map(x=>[x.username.toLowerCase(),x]));
- if(syncFollowingSnapshot){
-  for(const [key,old] of map){const rel=Array.isArray(old.relationshipTypes)?old.relationshipTypes:[];if(rel.includes("following"))map.set(key,{...old,relationshipTypes:rel.filter(x=>x!=="following"),followingStatus:"not_in_latest_snapshot",followingSnapshotAt:new Date().toISOString()})}
+ let syncResult=null;
+ if(syncFollowingSnapshot)syncResult=reconcileFollowingSnapshot(records,incomingAll);
+ else{
+  const map=new Map(records.map(x=>[x.username.toLowerCase(),x]));
+  for(const incoming of incomingAll){
+   const key=incoming.username.toLowerCase(),old=map.get(key);
+   if(old){duplicates++;const rel=[...new Set([...(old.relationshipTypes||[]),...(incoming.relationshipTypes||[])])];map.set(key,{...incoming,...old,relationshipTypes:rel,importSources:[...new Set([...(old.importSources||[]),...(incoming.importSources||[])])],avatarUrl:old.avatarUrl||incoming.avatarUrl,displayText:old.displayText||incoming.displayText})}
+   else{map.set(key,incoming);imported++}
+  }
+  syncResult={records:[...map.values()],imported,duplicates};
  }
- for(const incoming of incomingAll){
-  const key=incoming.username.toLowerCase(),old=map.get(key);
-  if(old){
-   duplicates++;const rel=[...new Set([...(old.relationshipTypes||[]),...(incoming.relationshipTypes||[])])];
-   const merged={...incoming,...old,relationshipTypes:rel,importSources:[...new Set([...(old.importSources||[]),...(incoming.importSources||[])])],avatarUrl:old.avatarUrl||incoming.avatarUrl,displayText:old.displayText||incoming.displayText};
-   if(incoming.relationshipTypes?.includes("following")){merged.followingStatus="following";merged.followingSnapshotAt=new Date().toISOString()}
-   map.set(key,merged);
-  }else{const created={...incoming};if(incoming.relationshipTypes?.includes("following")){created.followingStatus="following";created.followingSnapshotAt=new Date().toISOString()}map.set(key,created);imported++}
- }
- records=[...map.values()].sort((a,b)=>a.username.localeCompare(b.username));page=1;await browser.storage.local.set({accounts:records,...(syncFollowingSnapshot?{followingSnapshotImportedAt:new Date().toISOString()}: {})});render();
+ imported=syncResult.imported;duplicates=syncResult.duplicates;
+ records=syncResult.records.sort((a,b)=>a.username.localeCompare(b.username));page=1;await browser.storage.local.set({accounts:records,...(syncFollowingSnapshot?{followingSnapshotImportedAt:new Date().toISOString()}: {})});render();
  const syncMsg=syncFollowingSnapshot?" Following snapshot synchronized. Accounts absent from this export are marked “Not in latest export”.":"";
  const msg="Imported "+imported+" new accounts; merged "+duplicates+" existing entries."+syncMsg+(failed.length?" Issues: "+failed.join(" | "):"");
  status(msg,failed.length>0);$("jsonFiles").value="";$("fileNames").textContent="No files selected";$("import").disabled=true;
