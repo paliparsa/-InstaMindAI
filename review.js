@@ -18,6 +18,7 @@ function renderResult(record,state="Reviewed",error=false){
  else if(record.followBackStatus==="not_detected")add("No follow-back badge detected");
  else add("Follow-back unknown",true);
  (record.analysis?.contentFlags||[]).forEach(flag=>add("Content: "+flag));
+ (record.analysis?.reviewSignals||[]).forEach(signal=>add("Evidence: "+signal,true));
  if(!(record.analysis?.contentFlags||[]).length)add("No text-based content flags",true);
  if(record.analysis?.selfDescribedPronouns)add("Self-described: "+record.analysis.selfDescribedPronouns,true);
  main.append(tags);
@@ -27,7 +28,10 @@ function renderResult(record,state="Reviewed",error=false){
 function progress(done,total,label){$("progressTitle").textContent=label;$("progressCount").textContent=done+" / "+total;$("progressBar").style.width=(total?Math.round(done/total*100):0)+"%"}
 async function requestConsent(){
  const saved=await browser.storage.local.get("aiReviewConsent");
- if(saved.aiReviewConsent)return true;
+ if(saved.aiReviewConsent){
+  try{if(await browser.permissions.contains({data_collection:["websiteContent"]}))return true;await browser.storage.local.remove("aiReviewConsent")}
+  catch(_){return true}
+ }
  if(!$("consent").checked){say("Tick the consent box before sending profile data to Gemini.",true);return false}
  let allowed=true;
  try{allowed=await browser.permissions.request({data_collection:["websiteContent"]})}catch(_){allowed=true}
