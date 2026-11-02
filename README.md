@@ -9,7 +9,9 @@
 Firefox WebExtension for reviewing Instagram accounts you follow. The same codebase includes a mobile-friendly interface and packaging for **Firefox on Android**, plus a separate **Chrome Manifest V3** build.
 
 ## Features
-- Collects account links visible on your Instagram Following page. Scroll and collect repeatedly because Instagram lazy-loads the list.
+- **Scan Following:** one click reads the complete Following and Followers lists from Instagram's signed-in web API, paginates through them, and compares IDs/usernames to identify which accounts follow you back. Scan results are marked green (follows you), red (doesn't follow you), or amber (unverified) and can be filtered in the popup.
+- The full scan runs in the active signed-in Instagram tab context and saves the relationship snapshot locally. Instagram may rate-limit or change these internal endpoints; retry later if a scan is interrupted.
+- Also collects account links visible on your Instagram Following page for a manual/partial collection workflow.
 - Stores records locally; supports search, Keep/Review labels, per-account review, sequential bulk review, and CSV/JSON export.
 - **Review** beside an account opens its profile in a background tab and analyzes it; **Open** remains navigation-only.
 - Bulk review processes saved accounts one by one with progress and a stop control.
@@ -37,7 +39,7 @@ Open Settings. Add the text-analysis Gemini API key and model ID. For image anal
 - Before a review, explicitly consent to sending visible profile text and up to two randomly sampled visible post thumbnails to Google Gemini. Thumbnails are sent only if the separate Vision key is configured. This update requests consent again because images are a new data category.
 - API keys are stored in browser extension local storage and are not included in exports.
 - Does not infer gender, sex, age, identity, ethnicity, religion, sexual orientation, health, or other sensitive traits from photos, faces, names, usernames, or indirect clues. Pronouns are shown only when explicitly self-described in profile text.
-- Follow-back status uses Instagram's visible “Follows you” label when present. If absent, it is “not detected”, not proof the account does not follow you.
+- Full Scan Following compares the complete retrieved Followers list against Following account IDs/usernames. Visible-profile AI review separately reports a badge as evidence only; badge absence is not used to conclude non-followback.
 - Image analysis is a fallible visual screening aid. Verify all flags manually; uncertain images should not be treated as confirmed violations.
 - The extension never likes, follows, messages, or unfollows anyone.
 
@@ -53,7 +55,7 @@ For self-distribution signing, configure Actions secrets `AMO_JWT_ISSUER` and `A
 ## Firefox Desktop (temporary)
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Choose **Load Temporary Add-on…** and select the root `manifest.json`.
-3. Open Instagram, visit Following, scroll to load accounts, then choose **Collect visible accounts**.
+3. Open Instagram in a signed-in tab, then choose **Scan Following** to run the complete relationship scan. **Collect visible accounts** remains available for visible-only collection.
 
 ## Google Chrome (Manifest V3)
 1. Open **Actions → Build Chrome package → latest successful run → Artifacts**.
@@ -70,7 +72,7 @@ MIT
 ## Review queue and relationship tracking (0.8.1)
 - Added per-result Open profile and Mark as unfollowed actions. Marking is manual and updates only the local account library; it never clicks Instagram controls.
 - Added optional current Following snapshot sync when importing the official `following.json` export. Accounts missing from the latest snapshot lose the Following relation and are labelled as absent from the export, not assumed to have unfollowed you.
-- The extension does not read Instagram session cookies, crawl the full Following list automatically, or collect credentials. The existing visible-page collection remains user-triggered; use Instagram's official data download to refresh the complete local relationship snapshot.
+- The full Following scan is user-triggered and uses Instagram's internal web endpoints with the browser's signed-in session. The extension does not extract or store session cookies, passwords, or credential values.
 
 ## Previous review queue improvements (0.8.0)
 - Pause after the current profile and resume later from the next account. The queue checkpoint is stored locally and survives closing the review tab.
