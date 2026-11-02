@@ -45,6 +45,7 @@ function renderResult(record,state="Reviewed",error=false){
  const open=document.createElement("button");open.type="button";open.className="secondary";open.textContent="Open profile";open.addEventListener("click",()=>browser.tabs.create({url:safeProfileUrl(record.username),active:true}));actions.append(open);
  const marked=relationshipState(record)==="unfollowed";
  const mark=document.createElement("button");mark.type="button";mark.className="secondary"+(marked?" marked":"");mark.textContent=marked?"Marked unfollowed":"Mark as unfollowed";mark.title=marked?"This account is marked as manually unfollowed in your local list":"Use after you unfollow this account yourself on Instagram";mark.disabled=marked;mark.addEventListener("click",()=>markUnfollowed(record.username,mark,details));actions.append(mark);
+ const keepFollowing=document.createElement("button");keepFollowing.type="button";keepFollowing.className="secondary";keepFollowing.textContent="Keep from Following";keepFollowing.title="Permanently exclude this account from future imports, collection, and review queues";keepFollowing.addEventListener("click",()=>excludeFromFollowing(record.username,keepFollowing));actions.append(keepFollowing);
  compact.append(actions);$("results").append(row);
 }
 function progress(done,total,label){const percent=total?Math.round(done/total*100):0;$("progressTitle").textContent=label;$("progressCount").textContent=done+" / "+total;$("progressBar").style.width=percent+"%";$("progressBar").setAttribute("aria-valuenow",String(done));$("progressBar").setAttribute("aria-valuemax",String(total));$("progressPercent").textContent=percent+"%"}
@@ -59,6 +60,14 @@ async function markUnfollowed(username,button,details){
  await browser.storage.local.set({accounts:list.filter(x=>String(x.username||"").toLowerCase()!==username.toLowerCase())});
  button.textContent="Marked unfollowed · Removed";button.disabled=true;button.classList.add("marked");
  say("@"+username+" marked as manually unfollowed and removed from Account Manager.");
+}
+async function excludeFromFollowing(username,button){
+ const key=String(username||"").toLowerCase();if(!key)return;
+ const saved=await browser.storage.local.get(["excludedFollowingAccounts","accounts"]),excluded=new Set((saved.excludedFollowingAccounts||[]).map(x=>String(x).toLowerCase()));excluded.add(key);
+ const list=Array.isArray(saved.accounts)?saved.accounts:[],remaining=list.filter(x=>String(x.username||"").toLowerCase()!==key);
+ await browser.storage.local.set({excludedFollowingAccounts:[...excluded],accounts:remaining});
+ button.textContent="Kept out · Excluded";button.disabled=true;button.classList.add("marked");
+ say("@"+username+" is permanently excluded from future imports, collection, and review queues.");
 }
 async function removeMissingProfile(username){const data=await browser.storage.local.get("accounts"),list=Array.isArray(data.accounts)?data.accounts:[];await browser.storage.local.set({accounts:list.filter(x=>String(x.username||"").toLowerCase()!==username.toLowerCase())})}
 async function reviewOne(record,index,total){
