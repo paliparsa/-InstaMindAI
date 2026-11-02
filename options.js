@@ -51,4 +51,15 @@ globalThis.browser = globalThis.browser || globalThis.chrome;
  render("textModels");render("visionModels");
  // Persist the migrated list shape while retaining the legacy first-model fields.
  await browser.storage.local.set({textModels:state.textModels,visionModels:state.visionModels,model:state.textModels[0]||"",visionModel:state.visionModels[0]||""});
+
+ async function renderUsage(){
+  const data=await browser.storage.local.get("geminiUsageStatsV1"),stats=data.geminiUsageStatsV1||{},root=$("usageStats");root.replaceChildren();
+  const entries=Object.entries(stats).sort((a,b)=>(b[1].totalTokens||0)-(a[1].totalTokens||0));
+  if(!entries.length){const empty=document.createElement("p");empty.className="usage-empty";empty.textContent="No token usage recorded yet. Complete an AI review to start tracking.";root.append(empty);return}
+  for(const [key,value] of entries){const row=document.createElement("div");row.className="usage-row";const details=document.createElement("div");const [kind,model]=key.split(":");const title=document.createElement("strong");title.textContent=(kind==="vision"?"Image · ":"Text · ")+(model||"Unknown model");const meta=document.createElement("small");meta.textContent=(value.requests||0)+" successful requests · input "+(value.inputTokens||0).toLocaleString()+" · output "+(value.outputTokens||0).toLocaleString();details.append(title,meta);const total=document.createElement("strong");total.className="usage-total";total.textContent=(value.totalTokens||0).toLocaleString();const caption=document.createElement("small");caption.textContent="total tokens";caption.style.textAlign="right";const right=document.createElement("div");right.append(total,caption);row.append(details,right);root.append(row)}
+ }
+ $("refreshUsage")?.addEventListener("click",renderUsage);
+ browser.storage.onChanged?.addListener((changes,area)=>{if(area==="local"&&changes.geminiUsageStatsV1)renderUsage()});
+
+ renderUsage();
 })();
