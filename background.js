@@ -1,4 +1,5 @@
-/* global browser */
+/* global browser, chrome */
+globalThis.browser = globalThis.browser || globalThis.chrome;
 browser.runtime.onMessage.addListener(async (msg) => {
   if (msg?.type !== "AI_ANALYZE") return undefined;
   const cfg = await browser.storage.local.get(["provider","apiKey","model"]);
