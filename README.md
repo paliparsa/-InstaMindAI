@@ -41,7 +41,7 @@ Open Settings from the popup and add your own Google Gemini API key. It is store
 ## Privacy and boundaries
 - Never asks for Instagram credentials, cookies, session tokens, or DMs.
 - Reads only content already visible in your logged-in tab.
-- AI analysis is opt-in. Before a review run, you must explicitly agree to send visible profile text and metadata to Gemini; Firefox may also show its website-content permission prompt. The review queue reads profiles sequentially and waits between accounts.
+- AI analysis is opt-in. Before a review run, you must explicitly agree to send visible profile text and metadata to Gemini; Firefox may also show its website-content permission prompt. The review queue reads profiles sequentially and waits between accounts. After you grant consent once, Review actions can start automatically; revoke that saved consent from the review dashboard or Clear data in the popup.
 - Does not infer gender, sex, age, ethnicity, religion, sexual orientation, health, or other sensitive traits from photos, names or indirect clues. Pronouns are shown only when explicitly self-described in profile text.
 - Follow-back status uses Instagram's visible “Follows you” label when present. If the label is absent, the extension reports “not detected”; this is not conclusive proof that the account does not follow you.
 - Potentially sexualized-content flags require explicit evidence in visible profile text/captions. Image appearance, clothing, poses, swimwear, fashion, fitness, and beauty content are not used as evidence.
