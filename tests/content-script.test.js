@@ -1,3 +1,4 @@
+(async () => {
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
@@ -28,10 +29,12 @@ const sandbox = {
 vm.runInNewContext(source, sandbox);
 vm.runInNewContext(source, sandbox);
 assert.equal(registered.length, 1, "reinjection must not register duplicate message listeners");
-const collected = registered[0]({ type: "COLLECT_FOLLOWING" });
+const collected = await registered[0]({ type: "COLLECT_FOLLOWING" });
 assert.equal(collected.ok, true);
 assert.equal(collected.accounts.length, 1);
 assert.equal(collected.accounts[0].username, "sample_account");
-const profile = registered[0]({ type: "READ_PROFILE" });
+const profile = await registered[0]({ type: "READ_PROFILE" });
 assert.equal(profile.profile.username, "sample_account");
 console.log("Content-script messaging tests passed (collection, profile read, idempotent reinjection).");
+
+})().catch(error => { console.error(error); process.exitCode = 1; });
