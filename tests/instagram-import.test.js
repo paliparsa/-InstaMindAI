@@ -9,8 +9,8 @@ assert.notEqual(start, -1, "account import helpers must exist");
 assert.notEqual(end, -1, "account import helper boundary must exist");
 
 const sandbox = { URL, Date, Map, Set };
-vm.runInNewContext(source.slice(start, end) + "\nglobalThis.importApi = { usernameFromUrl, extractJsonAccounts };", sandbox);
-const { usernameFromUrl, extractJsonAccounts } = sandbox.importApi;
+vm.runInNewContext(source.slice(start, end) + "\nglobalThis.importApi = { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot };", sandbox);
+const { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot } = sandbox.importApi;
 
 assert.equal(usernameFromUrl("https://www.instagram.com/_u/sanamiriartist"), "sanamiriartist");
 assert.equal(usernameFromUrl("https://www.instagram.com/sanamiriartist/"), "sanamiriartist");
@@ -25,6 +25,23 @@ const sample = {
 const parsedSample = extractJsonAccounts(sample, "following.json");
 assert.equal(parsedSample.length, 1);
 assert.equal(parsedSample[0].username, "sanamiriartist");
+
+const reconciled = reconcileFollowingSnapshot([
+  { username: "still_here", relationshipTypes: ["following"], status: "keep" },
+  { username: "not_here", relationshipTypes: ["following", "followers"] },
+  { username: "follower_only", relationshipTypes: ["followers"] }
+], [
+  { username: "still_here", relationshipTypes: ["following"], importSources: ["following.json"] },
+  { username: "new_following", relationshipTypes: ["following"] }
+], "2026-11-03T00:00:00.000Z");
+const byUsername = new Map(reconciled.records.map(item => [item.username, item]));
+assert.equal(byUsername.get("still_here").followingStatus, "following");
+assert.equal(byUsername.get("not_here").followingStatus, "not_in_latest_snapshot");
+assert.deepEqual(Array.from(byUsername.get("not_here").relationshipTypes), ["followers"]);
+assert.equal(byUsername.get("follower_only").followingStatus, undefined);
+assert.equal(byUsername.get("new_following").followingStatus, "following");
+assert.equal(reconciled.imported, 1);
+assert.equal(reconciled.duplicates, 1);
 assert.deepEqual(Array.from(parsedSample[0].relationshipTypes), ["following"]);
 
 const relationships_following = Array.from({ length: 30000 }, (_, i) => ({
