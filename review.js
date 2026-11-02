@@ -26,9 +26,13 @@ function renderResult(record,state="Reviewed",error=false){
 }
 function progress(done,total,label){$("progressTitle").textContent=label;$("progressCount").textContent=done+" / "+total;$("progressBar").style.width=(total?Math.round(done/total*100):0)+"%"}
 async function requestConsent(){
+ const saved=await browser.storage.local.get("aiReviewConsent");
+ if(saved.aiReviewConsent)return true;
  if(!$("consent").checked){say("Tick the consent box before sending profile data to Gemini.",true);return false}
- try{return await browser.permissions.request({data_collection:["websiteContent"]})}
- catch(_){return true}
+ let allowed=true;
+ try{allowed=await browser.permissions.request({data_collection:["websiteContent"]})}catch(_){allowed=true}
+ if(allowed)await browser.storage.local.set({aiReviewConsent:true});
+ return allowed;
 }
 async function waitForTab(tabId){
  for(let i=0;i<100;i++){
@@ -97,7 +101,10 @@ async function start(){
  say((cancelled?"Stopped. ":"Finished. ")+success+" of "+done+" profiles reviewed successfully. Failed profiles are marked above.",success===0);
 }
 $("settings").addEventListener("click",()=>browser.runtime.openOptionsPage());
+$("revoke").addEventListener("click",async()=>{cancelled=true;await browser.storage.local.remove("aiReviewConsent");say("Saved AI review consent revoked. The next review will ask again.");});
 $("start").addEventListener("click",start);
 $("cancel").addEventListener("click",()=>{cancelled=true;$("cancel").disabled=true;say("Stop requested. The current profile will finish first.")});
 $("back").addEventListener("click",event=>{event.preventDefault();browser.tabs.create({url:browser.runtime.getURL("popup.html")})});
 if(params.get("username"))$("heading").textContent="Review @"+params.get("username");else if(params.get("all"))$("heading").textContent="Review all collected accounts";
+
+(async()=>{const saved=await browser.storage.local.get("aiReviewConsent");if(saved.aiReviewConsent&&(params.get("username")||params.get("all")))start()})();
