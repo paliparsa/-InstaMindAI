@@ -38,9 +38,12 @@ function renderResult(record,state="Reviewed",error=false){
  if(vision?.result?.imageFindings?.length){const section=document.createElement("section");section.className="result-section";addText(section,"h4","","Sampled image findings");vision.result.imageFindings.forEach(f=>{const item=document.createElement("div");item.className="finding";addText(item,"strong","",String(f.classification||"Finding").replaceAll("_"," "));addText(item,"p","",f.evidence||"No visual evidence description was returned.");if(f.confidence!=null)addText(item,"small","","Confidence "+Math.round(Number(f.confidence)*100)+"%");section.append(item)});row.append(section)}
  else if(vision?.skipped)addText(row,"p","result-note","Image review skipped: "+(vision.reason||"not configured"));
  else if(vision?.error||vision?.ok===false)addText(row,"p","result-note","Image review unavailable: "+(vision.error||"unknown error"));
+ if(record.followingStatus==="unfollowed_manually")addTag(details,"Manually marked unfollowed","positive");
+ else if(record.followingStatus==="not_in_latest_snapshot")addTag(details,"Not in latest Following export","warning");
  const actions=document.createElement("div");actions.className="result-actions";
  const open=document.createElement("button");open.type="button";open.className="secondary";open.textContent="Open profile";open.addEventListener("click",()=>browser.tabs.create({url:safeProfileUrl(record.username),active:true}));actions.append(open);
- const unfollow=document.createElement("button");unfollow.type="button";unfollow.className="secondary";unfollow.textContent="Unfollow manually";unfollow.title="Open Instagram so you can confirm and unfollow yourself";unfollow.addEventListener("click",()=>browser.tabs.create({url:safeProfileUrl(record.username),active:true}));actions.append(unfollow);
+ const marked=record.followingStatus==="unfollowed_manually";
+ const mark=document.createElement("button");mark.type="button";mark.className="secondary"+(marked?" marked":"");mark.textContent=marked?"Marked unfollowed":"Mark as unfollowed";mark.title=marked?"This account is marked as manually unfollowed in your local list":"Use after you unfollow this account yourself on Instagram";mark.disabled=marked;mark.addEventListener("click",()=>markUnfollowed(record.username,mark,details));actions.append(mark);
  row.append(actions);$("results").append(row);
 }
 function progress(done,total,label){const percent=total?Math.round(done/total*100):0;$("progressTitle").textContent=label;$("progressCount").textContent=done+" / "+total;$("progressBar").style.width=percent+"%";$("progressBar").setAttribute("aria-valuenow",String(done));$("progressBar").setAttribute("aria-valuemax",String(total));$("progressPercent").textContent=percent+"%"}
@@ -49,6 +52,16 @@ async function waitForTab(tabId){for(let i=0;i<100;i++){let tab;try{tab=await br
 async function injectProfileReader(tabId){try{if(browser.scripting?.executeScript){await browser.scripting.executeScript({target:{tabId},files:["content.js"]});return true}if(browser.tabs?.executeScript){await browser.tabs.executeScript(tabId,{file:"content.js"});return true}}catch(error){return {ok:false,error:error?.message||"Script injection failed."}}return false}
 async function readProfile(tabId,expectedUsername){let injected=false;for(let i=0;i<25;i++){try{let response;try{response=await browser.tabs.sendMessage(tabId,{type:"READ_PROFILE"})}catch(_){if(!injected){const injection=await injectProfileReader(tabId);injected=injection===true;if(!injected&&injection?.error)throw Error("Could not inject the Instagram reader: "+injection.error);await wait(500)}response=await browser.tabs.sendMessage(tabId,{type:"READ_PROFILE"})}const profile=response?.profile;if(profile?.username&&(!expectedUsername||profile.username.toLowerCase()===expectedUsername.toLowerCase())){if((profile.visibleText||"").length>20||i>=5)return profile}}catch(_){}await wait(800)}throw Error("Instagram profile did not become readable. Confirm you are signed in and the profile is accessible to your account.")}
 async function persist(record){const current=await browser.storage.local.get("accounts"),list=Array.isArray(current.accounts)?current.accounts:[],idx=list.findIndex(x=>x.username?.toLowerCase()===record.username.toLowerCase());if(idx>=0)list[idx]={...list[idx],...record};else list.unshift(record);await browser.storage.local.set({accounts:list})}
+async function markUnfollowed(username,button,details){
+ const data=await browser.storage.local.get("accounts"),list=Array.isArray(data.accounts)?data.accounts:[],idx=list.findIndex(x=>String(x.username||"").toLowerCase()===username.toLowerCase());
+ if(idx<0){say("This account is no longer in your local account list.",true);return}
+ const current=list[idx],relations=Array.isArray(current.relationshipTypes)?current.relationshipTypes:[];
+ list[idx]={...current,relationshipTypes:relations.filter(x=>x!=="following"),followingStatus:"unfollowed_manually",followingStatusUpdatedAt:new Date().toISOString()};
+ await browser.storage.local.set({accounts:list});
+ button.textContent="Marked unfollowed";button.disabled=true;button.classList.add("marked");button.title="Saved locally as manually unfollowed";
+ addTag(details,"Manually marked unfollowed","positive");
+ say("@"+username+" marked as manually unfollowed. This only updates your local list; Instagram was not changed by InstaMind.");
+}
 async function reviewOne(record,index,total){
  let tab=null;try{
   say("Opening @"+record.username+" ("+(index+1)+" of "+total+")…");tab=await browser.tabs.create({url:safeProfileUrl(record.username),active:false});await waitForTab(tab.id);const profile=await readProfile(tab.id,record.username);
