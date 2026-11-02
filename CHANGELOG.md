@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.1 — Manual unfollow status and Following snapshot sync
+- Replaced the duplicate “Unfollow manually” profile-opening shortcut with a local “Mark as unfollowed” action on every review result, alongside “Open profile”.
+- Manual marking removes the Following relation from the local account record and records a timestamp; it does not interact with Instagram.
+- Added an optional current-snapshot mode for importing Instagram's official `following.json`; missing accounts are labelled “Not in latest export” rather than being treated as confirmed unfollows.
+- Kept relationship data local and did not add Instagram session, cookie, password, or scraping access.
+- Bumped Firefox and Chrome extension versions to 0.8.1.
+
 ## 0.8.0 — Resumable review, clearer results and Gemini token tracking
 - Added pause-after-current-profile and resume-from-checkpoint for bulk and single-profile review; progress survives closing the review tab.
 - Reworked review results into readable profile summaries, evidence, categories, image findings, confidence and model details.
