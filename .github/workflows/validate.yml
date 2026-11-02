@@ -21,5 +21,8 @@ jobs:
           node --check background.js
           node --check content.js
           node --check popup.js
+          node --check accounts.js
           node --check options.js
           node --check review.js
+      - name: Test Instagram JSON import
+        run: node tests/instagram-import.test.js
