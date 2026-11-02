@@ -51,3 +51,14 @@ Open Settings from the popup and add your own Google Gemini API key. It is store
 
 ## License
 MIT
+
+## Google Chrome (Manifest V3)
+
+A separate Chrome package is built from the shared extension interface and scripts, using the dedicated `chrome/manifest.json` Manifest V3 configuration. The Firefox Manifest V2 manifest remains unchanged.
+
+1. Open **Actions → Build Chrome package → latest successful run → Artifacts**.
+2. Download the `instamind-ai-chrome` artifact and extract the downloaded GitHub artifact ZIP.
+3. Inside it, use `instamind-ai-chrome.zip` in Chrome's **chrome://extensions** page with **Developer mode → Load unpacked** (extract the extension ZIP first, then select the extracted folder). For Chrome Web Store submission, upload `instamind-ai-chrome.zip` directly in the Developer Dashboard.
+4. To load locally, select the extracted folder that contains `manifest.json` directly at its root.
+
+The Chrome workflow validates that the package is Manifest V3 and that `manifest.json` is at the ZIP root. It is separate from the Firefox/Android package workflow.
