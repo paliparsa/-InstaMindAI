@@ -13,6 +13,7 @@ function renderResult(record,state="Reviewed",error=false){
  const summary=document.createElement("p");summary.textContent=record.analysis?.bioSummary||record.reviewError||"No summary available.";main.append(summary);
  const tags=document.createElement("div");tags.className="result-tags";
  const add=(label,neutral=false)=>{const t=document.createElement("span");t.className="result-tag"+(neutral?" neutral":"");t.textContent=label;tags.append(t)};
+ if(record.flaggedForReview)add("Possible match — verify manually");
  if(record.followBackStatus==="follows_you")add("Follows you",true);
  else if(record.followBackStatus==="not_detected")add("No follow-back badge detected");
  else add("Follow-back unknown",true);
@@ -61,7 +62,9 @@ async function reviewOne(record,index,total){
   say("Analyzing @"+record.username+" with Gemini…");
   const result=await browser.runtime.sendMessage({type:"AI_ANALYZE",profile});
   if(!result?.ok)throw Error(result?.error||"AI analysis failed.");
-  const reviewed={...record,profileUrl:safeProfileUrl(record.username),analysis:result.result,followBackStatus:profile.followsYouEvidence?"follows_you":((profile.visibleText||"").length>20?"not_detected":"unknown"),followBackEvidence:profile.followsYouEvidence||null,lastReviewedAt:new Date().toISOString(),reviewError:null};
+  const followBackStatus=profile.followsYouEvidence?"follows_you":((profile.visibleText||"").length>20?"not_detected":"unknown");
+  const contentFlags=Array.isArray(result.result?.contentFlags)?result.result.contentFlags:[];
+  const reviewed={...record,profileUrl:safeProfileUrl(record.username),analysis:result.result,followBackStatus,flaggedForReview:followBackStatus==="not_detected"&&contentFlags.length>0,followBackEvidence:profile.followsYouEvidence||null,lastReviewedAt:new Date().toISOString(),reviewError:null};
   await persist(reviewed);renderResult(reviewed,"Reviewed");return true;
  }catch(error){
   const failed={...record,reviewError:error.message,lastReviewedAt:new Date().toISOString()};
