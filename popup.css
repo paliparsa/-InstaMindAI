@@ -52,6 +52,15 @@ button:disabled{opacity:.42;cursor:not-allowed}
 .info{min-width:0;flex:1}.info strong,.info small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff}
 .info strong{font-size:11px;font-weight:650}.info small{font-size:10px;color:var(--muted)}
 .tag{font-size:9px;color:#fff;opacity:.72}.tag.keep,.tag.flagged{color:#fff;opacity:1}
+.relationship-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:0 18px 12px}
+.relationship-summary>div{display:flex;flex-direction:column;gap:3px;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:#050505;min-width:0}
+.relationship-summary strong{font-size:16px;line-height:1.2}.relationship-summary span{font-size:9px;line-height:1.35;color:var(--muted)}
+.relationship-state{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid currentColor;border-radius:5px;font-size:9px;white-space:nowrap}
+.relationship-state.following,.relationship-summary .following{color:#59cf8a;border-color:#286c45}
+.relationship-state.unfollowed,.relationship-summary .unfollowed{color:#ff7777;border-color:#783c3c}
+.relationship-state.pending_verification,.relationship-summary .pending{color:#e8b75c;border-color:#775b2d}
+.relationship-summary .following,.relationship-summary .unfollowed,.relationship-summary .pending{border-color:currentColor}
+
 .mini{border:1px solid #fff;border-radius:6px;background:#000;color:#fff;padding:5px 7px;font-size:10px;min-height:28px}
 .empty{text-align:center;color:var(--muted);padding:24px 7px;font-size:11px}
 .analysis{margin:10px 18px;padding:12px;border:1px solid #444;border-radius:8px;background:#050505}
