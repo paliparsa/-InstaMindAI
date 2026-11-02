@@ -5,7 +5,8 @@ function bytesToBase64(bytes){let binary="";for(let i=0;i<bytes.length;i+=0x8000
 async function analyzeText(profile){
   const cfg=await browser.storage.local.get(["apiKey","model"]);if(!cfg.apiKey)return {ok:false,error:"Add your Gemini text-analysis API key in Settings first."};
   const model=cfg.model||"gemini-2.0-flash",url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(cfg.apiKey);
-  const {visiblePostImages,...textOnlyProfile}=profile||{};\n  const prompt=[
+  const {visiblePostImages,...textOnlyProfile}=profile||{};
+  const prompt=[
     "Review this Instagram profile using only the supplied visible text and metadata.",
     "Never infer gender, sex, age, ethnicity, religion, sexual orientation, health, or any sensitive trait from a face, photo, name, username, or indirect clue. Never identify a person in an image.",
     "Only report pronouns when explicitly self-described in profile text.",
