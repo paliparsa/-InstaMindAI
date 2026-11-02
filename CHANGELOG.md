@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.2 — Instagram JSON import compatibility and large-file handling
+- Recognize Instagram's official `/ _u / username` export links (for example, `https://www.instagram.com/_u/username`) as account URLs.
+- Keep support for `relationships_following`, `relationships_followers`, nested exports, and InstaMind exports.
+- Replace repeated linear duplicate scans with a case-insensitive Map so large relationship lists import efficiently.
+- Raise the per-file size limit from 20 MB to 50 MB; files are still parsed locally and never uploaded.
+- Bumped Chrome and Firefox extension versions to 0.7.2.
+
 ## 0.7.1 — Desktop popup sizing and monochrome redesign
 - Fixed the popup's desktop geometry at 420 × 600 CSS pixels and removed the narrow-screen media rule that incorrectly treated desktop browser popups as mobile layouts.
 - Reworked the popup, settings, account manager, and review queue with a pure black/white minimal visual system.
