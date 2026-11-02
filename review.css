@@ -35,6 +35,9 @@
 .result-details{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .result-tag{font-size:10px;padding:4px 7px;border-radius:5px;border:1px solid #444;color:#ddd}
 .result-tag.positive{border-color:#777;color:#fff}.result-tag.warning{border-color:#aaa;color:#fff;background:#171717}.result-tag.category{border-color:#333;color:#aaa}
+.result-tag.following{color:#59cf8a;border-color:#286c45;background:#07170e}
+.result-tag.unfollowed{color:#ff7777;border-color:#783c3c;background:#1a0808}
+.result-tag.pending_verification{color:#e8b75c;border-color:#775b2d;background:#191307}
 .result-section{margin-top:12px;padding:10px 12px;border:1px solid #292929;border-radius:7px;background:#050505}
 .result-section h4{margin:0 0 7px;font-size:11px;color:#fff}.result-section ul{margin:0;padding-left:18px;color:#ccc;font-size:11px;line-height:1.65}
 .result-section summary{font-size:11px;cursor:pointer;color:#ddd}
