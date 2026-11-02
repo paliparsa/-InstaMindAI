@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.1 — Desktop popup sizing and monochrome redesign
+- Fixed the popup's desktop geometry at 420 × 600 CSS pixels and removed the narrow-screen media rule that incorrectly treated desktop browser popups as mobile layouts.
+- Reworked the popup, settings, account manager, and review queue with a pure black/white minimal visual system.
+- Added Yekan-style system font fallbacks for English UI text; no remote font requests or extra font downloads.
+- Updated both Chrome and Firefox extension versions to 0.7.1.
+
+
 ## 0.7.0 — Ordered model pools and rate-limit fallback
 - Added editable text and image model priority lists with add, edit, delete, drag-to-reorder, and accessible move-up/move-down controls.
 - Model lists are tried from top to bottom and stored locally; existing single-model settings migrate automatically.

@@ -4,17 +4,32 @@
 A compact browser-extension workspace for reviewing Instagram accounts already visible in the user's Following list. Primary tasks: collect, inspect, analyze, flag for manual review, and export.
 
 ## Visual direction
-Keep the existing restrained dark interface and royal-blue action color. Avoid gradients, decorative dashboard cards, oversized hero treatments, and marketing copy. The extension should feel like a precise utility, not a social network.
+A restrained monochrome utility: pure black canvas, crisp white typography and controls, thin charcoal separators, and almost no ornament. The interface should feel closer to a carefully typeset desktop instrument than a colorful social dashboard. The signature is the hard black/white contrast and compact editorial typography. Avoid gradients, colored accents, decorative cards, and marketing-style hero treatments.
 
-## Tokens
-- Background: #0b0c10
-- Surface: #141720
-- Border: #292e3a
-- Primary text: #f3f5f8
-- Muted text: #929bad
-- Action blue: #6688ff
-- Warning evidence: muted amber (#e9c58b)
-- Positive state: soft green (#82d9b2)
+## Colors and runtime mapping
+- Background: #000000 (--bg)
+- Panel: #050505 (--panel)
+- Raised panel: #0d0d0d (--panel-raised)
+- Border: #282828 (--line)
+- Primary text: #ffffff (--text)
+- Secondary text: rgba(255,255,255,.66) (--muted)
+- Primary button: #ffffff background with #000000 text
+- Secondary button: #000000 background with #ffffff text
+- Focus: #ffffff
+
+Runtime tokens are defined in popup.css under :root and consumed by the popup, account manager, review queue, and settings page. Page-specific styles may adjust layout, but not introduce new accent colors.
+
+## Typography
+Use a Yekan-inspired system fallback stack for English text: "Yekan Bakh", "IRANYekan", "Vazirmatn", "Segoe UI", Tahoma, sans-serif. No remote font loading. Use compact, clear headings, modest letter spacing, and tabular numerals for counts.
+
+## Layout
+- Desktop browser-action popup: fixed 420 × 600 CSS pixels, matching Chrome and Firefox desktop popup constraints.
+- Popup content scrolls vertically inside the fixed viewport; never use a mobile-width media query to resize the desktop popup.
+- Settings, account manager, and review queue open in full browser tabs and use responsive document layouts.
+- Keep the popup focused on collect, review, quick status, and navigation. Longer account and review workflows remain in tabs.
+
+## Shapes and components
+Use restrained 7–9px corner radii, 1px charcoal borders, flat black surfaces, and no shadows. Primary actions are white-filled with black text; secondary actions are black with white borders and white text. Use native semantic controls and visible white focus rings.
 
 ## Interaction contract
 - Open navigates only; Review opens the profile in a background tab and analyzes it.
@@ -25,11 +40,18 @@ Keep the existing restrained dark interface and royal-blue action color. Avoid g
 - Content flags must cite explicit visible text evidence; never infer sensitive traits from images or names.
 - Keep all data local except profile text the user explicitly consents to send to Gemini.
 
-## Account manager workflow\n- The account library opens in a dedicated browser tab, separate from the compact popup.\n- JSON imports are parsed locally; support Instagram followers/following exports and InstaMind exports.\n- Merge by normalized username and preserve prior status, analysis, and relationship data.\n- Search and filters reset pagination; each page shows at most 25 accounts.\n- Account rows retain Open, Review, and Keep/Undo actions; bulk review uses the existing sequential review queue.\n\n## Model settings workflow
+## Account manager workflow
+- The account library opens in a dedicated browser tab, separate from the compact popup.
+- JSON imports are parsed locally; support Instagram followers/following exports and InstaMind exports.
+- Merge by normalized username and preserve prior status, analysis, and relationship data.
+- Search and filters reset pagination; each page shows at most 25 accounts.
+- Account rows retain Open, Review, and Keep/Undo actions; bulk review uses the existing sequential review queue.
+
+## Model settings workflow
 - Text and image analysis have separate, locally stored ordered model lists and separate API keys.
 - Model rows support direct ID editing, add, remove, pointer drag-and-drop, and keyboard/touch move-up/move-down controls.
 - The priority order is top-to-bottom. Rate-limited Gemini models enter a 60-second cooldown and the next available model is attempted automatically.
 - The settings page displays the actual model selected for each completed profile review and any fallback path.
 
 ## Accessibility
-Use native buttons and form controls, visible focus, text labels for status, keyboard operation, and reduced-motion support. Preserve usable layout at narrow extension widths.
+Use native buttons and form controls, visible focus, text labels for status, keyboard operation, and reduced-motion support. Preserve a stable 420 × 600 desktop popup and responsive full-tab layouts.

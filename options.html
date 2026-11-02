@@ -6,38 +6,42 @@
 <title>InstaMind AI — Settings</title>
 <link rel="stylesheet" href="popup.css">
 <style>
-body{width:auto;max-width:760px;margin:34px auto;padding:0 20px 48px}
-.settings-card{padding:24px;background:#141720;border:1px solid #292e3a;border-radius:14px}
-.intro{max-width:650px;color:#929bad;font-size:13px;line-height:1.65}
-.settings-section{padding:20px 0;border-bottom:1px solid #292e3a}
+body{width:auto;max-width:760px;min-height:100vh;margin:0 auto;padding:30px 20px 48px;background:#000;color:#fff}
+.settings-card{padding:25px;background:#050505;border:1px solid #303030;border-radius:10px}
+.settings-card>h2{font-size:22px;letter-spacing:-.5px;margin:0 0 8px}
+.intro{max-width:650px;color:rgba(255,255,255,.68);font-size:13px;line-height:1.7}
+.settings-section{padding:21px 0;border-bottom:1px solid #282828}
 .settings-section:last-of-type{border-bottom:0}
 .settings-section h3{margin:0 0 7px;font-size:15px}
-.field-label{display:block;margin:16px 0 7px;color:#cbd1df;font-size:13px}
-.settings-input,.model-input{width:100%;min-width:0;padding:11px 12px;background:#0b0c10;border:1px solid #343b4b;border-radius:8px;color:#f3f5f8;font:inherit;box-sizing:border-box}
-.settings-input:focus,.model-input:focus{outline:2px solid #6688ff;outline-offset:2px}
+.field-label{display:block;margin:16px 0 7px;color:#fff;font-size:12px}
+.settings-input,.model-input{width:100%;min-width:0;padding:11px 12px;background:#000;border:1px solid #444;border-radius:7px;color:#fff;font:inherit;box-sizing:border-box}
+.settings-input::placeholder,.model-input::placeholder{color:rgba(255,255,255,.45)}
+.settings-input:focus,.model-input:focus{outline:2px solid #fff;outline-offset:2px}
 .secret-row{display:flex;gap:8px}.secret-row .settings-input{flex:1}
-.secret-toggle,.move-model,.remove-model,.drag-handle{border:1px solid #343b4b;border-radius:8px;background:#10131a;color:#cbd1df;cursor:pointer}
+.secret-toggle,.move-model,.remove-model,.drag-handle{border:1px solid #555;border-radius:7px;background:#000;color:#fff;cursor:pointer}
 .secret-toggle{padding:0 12px;min-width:64px}
 .model-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 9px}
-.model-heading label{font-size:13px;color:#cbd1df;font-weight:600}
-.order-note,.note{font-size:12px;color:#929bad;line-height:1.6}
+.model-heading label{font-size:13px;color:#fff;font-weight:650}
+.order-note,.note{font-size:12px;color:rgba(255,255,255,.62);line-height:1.6}
 .model-list{display:grid;gap:7px;margin:10px 0 14px}
-.model-row{display:grid;grid-template-columns:25px 1fr 30px 30px 34px;align-items:center;gap:7px;padding:8px;background:#0e1118;border:1px solid #292e3a;border-radius:9px}
-.model-row.dragging{opacity:.45;border-color:#6688ff}
-.model-row.drop-target{border-color:#6688ff;background:#151c2c}
-.drag-handle{display:flex;align-items:center;justify-content:center;width:25px;height:34px;font-size:16px;color:#929bad;cursor:grab;touch-action:none;user-select:none}
+.model-row{display:grid;grid-template-columns:25px 1fr 30px 30px 34px;align-items:center;gap:7px;padding:8px;background:#000;border:1px solid #303030;border-radius:7px}
+.model-row.dragging{opacity:.45;border-color:#fff}
+.model-row.drop-target{border-color:#fff;background:#151515}
+.drag-handle{display:flex;align-items:center;justify-content:center;width:25px;height:34px;font-size:16px;color:#fff;cursor:grab;touch-action:none;user-select:none}
 .model-input{padding:8px 10px;font-size:13px}
 .move-model,.remove-model{width:30px;height:34px;padding:0;font-size:15px}
-.remove-model{color:#ffaaaa;border-color:#633b43}
+.remove-model{color:#fff;border-color:#666}
 .move-model:disabled{opacity:.3;cursor:not-allowed}
-.drag-handle:focus-visible,.move-model:focus-visible,.remove-model:focus-visible,.secret-toggle:focus-visible,.add-model:focus-visible,.save-settings:focus-visible{outline:2px solid #6688ff;outline-offset:2px}
+.drag-handle:focus-visible,.move-model:focus-visible,.remove-model:focus-visible,.secret-toggle:focus-visible,.add-model:focus-visible,.save-settings:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .add-model-row{display:flex;gap:8px}.add-model-row input{flex:1}
-.add-model{padding:0 14px;min-height:40px;border:1px solid #3e5cae;border-radius:8px;background:#172443;color:#dce5ff;font-weight:700;cursor:pointer;white-space:nowrap}
-.save-settings{margin-top:20px;min-height:42px;padding:0 18px;border:0;border-radius:8px;background:#6688ff;color:#071020;font-weight:800;cursor:pointer}
-.saved{min-height:20px;margin:12px 0 0;color:#82d9b2;font-size:13px}
-.privacy{margin-top:24px;padding-top:18px;border-top:1px solid #292e3a}
-@media(max-width:560px){body{margin:18px auto;padding:0 12px 32px}.settings-card{padding:17px}.model-row{grid-template-columns:23px minmax(0,1fr) 28px 28px 30px;gap:5px}.move-model,.remove-model{width:28px}.model-heading{align-items:flex-start;flex-direction:column}}
+.add-model{padding:0 14px;min-height:40px;border:1px solid #fff;border-radius:7px;background:#fff;color:#000;font-weight:750;cursor:pointer;white-space:nowrap}
+.add-model:hover,.save-settings:hover{background:#dedede}
+.save-settings{margin-top:20px;min-height:42px;padding:0 18px;border:1px solid #fff;border-radius:7px;background:#fff;color:#000;font-weight:750;cursor:pointer}
+.saved{min-height:20px;margin:12px 0 0;color:#fff;font-size:12px}
+.privacy{margin-top:24px;padding-top:18px;border-top:1px solid #282828}
+@media(max-width:560px){body{margin:0 auto;padding:18px 12px 32px}.settings-card{padding:17px}.model-row{grid-template-columns:23px minmax(0,1fr) 28px 28px 30px;gap:5px}.move-model,.remove-model{width:28px}.model-heading{align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:no-preference){.model-row{transition:border-color .12s,background .12s,opacity .12s}}
+
 </style>
 </head>
 <body>
