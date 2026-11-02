@@ -64,3 +64,10 @@ Use native buttons and form controls, visible focus, text labels for status, key
 - Semantic colors: Following = green, Unfollowed = red, Pending verification = amber. Always display the text label as well as color.
 - Open extension pages subscribe to `browser.storage.onChanged` and refresh from the shared local `accounts` records.
 - Prune an account only after an explicit Instagram unavailable/not-found message. Private accounts, login walls, transient failures, and ambiguous empty pages must never be treated as deleted.
+
+
+## Compact Review results and manual removal (0.8.3)
+- Review result cards show their username and outcome at a glance; long analysis details are placed in a collapsed disclosure to reduce vertical page length.
+- Manual “Mark as unfollowed” in Review removes the account from the shared local account library, which synchronizes the removal to Account Manager and other open extension pages.
+- Account Manager exposes the same manual decision for records still marked Following; the user completes unfollow on Instagram first, then marks and removes the record locally.
+- Bulk review checks the shared account library before analyzing each queued item and skips entries removed while the queue is running.
