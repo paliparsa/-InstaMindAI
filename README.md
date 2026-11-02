@@ -4,9 +4,11 @@ Firefox WebExtension for reviewing Instagram accounts you follow. The same codeb
 
 ## Features
 - Collects account links visible on your Instagram Following page. Scroll and collect repeatedly because Instagram lazy-loads the list.
-- Stores records locally in Firefox; supports search, Keep/Review labels, and CSV/JSON export.
-- Analyzes the currently open profile's visible bio, page text, image alt text and post metadata using your own Gemini API key.
-- Keeps all account decisions manual. It never performs an unfollow.
+- Stores records locally; supports search, Keep/Review labels, per-account review, sequential bulk review, and CSV/JSON export.
+- **Review** beside an account opens its profile in a background tab and analyzes it; **Open** remains a separate navigation-only action.
+- **Review all collected accounts** processes saved accounts one by one with a delay, progress display, and stop control.
+- Gemini reviews visible bio/page text and metadata for content themes and explicit text-based content signals. It never judges a person's gender or appearance.
+- Keeps account decisions manual. It never likes, follows, messages, or unfollows anyone.
 
 ## Firefox on Android
 The Android release uses the same WebExtension source and manifest; it is not a separate native APK. The popup layout is responsive and exports have a download-link fallback for Firefox builds where the downloads API is unavailable.
@@ -39,15 +41,17 @@ Open Settings from the popup and add your own Google Gemini API key. It is store
 ## Privacy and boundaries
 - Never asks for Instagram credentials, cookies, session tokens, or DMs.
 - Reads only content already visible in your logged-in tab.
-- AI analysis is opt-in per profile. Before the first analysis, Firefox asks permission to transmit website content (or an explicit confirmation is shown on older Firefox versions). Visible profile data is sent to Gemini only after consent and when you press Analyze.
-- Does not infer gender, sex, age, ethnicity, religion, sexual orientation, health, or other sensitive traits from photos, names or indirect clues.
+- AI analysis is opt-in. Before a review run, you must explicitly agree to send visible profile text and metadata to Gemini; Firefox may also show its website-content permission prompt. The review queue reads profiles sequentially and waits between accounts.
+- Does not infer gender, sex, age, ethnicity, religion, sexual orientation, health, or other sensitive traits from photos, names or indirect clues. Pronouns are shown only when explicitly self-described in profile text.
+- Follow-back status uses Instagram's visible “Follows you” label when present. If the label is absent, the extension reports “not detected”; this is not conclusive proof that the account does not follow you.
+- Potentially sexualized-content flags require explicit evidence in visible profile text/captions. Image appearance, clothing, poses, swimwear, fashion, fitness, and beauty content are not used as evidence.
 - No automated unfollowing, scraping of private data, or bypassing platform limits.
 
 ## Development and validation
 - Dependency-free Firefox Manifest V2 WebExtension; no app build step is required.
 - Run the GitHub Actions packaging workflow to lint and package the extension.
 - Android behavior still needs a real-device smoke test across the supported Firefox Android versions. Instagram may change its DOM, so visible-page collection can need maintenance.
-- AI output is fallible and must be checked by a human. Not affiliated with Instagram or Meta.
+- AI output is fallible and must be checked by a human. Bulk review only processes accounts already collected from the visible Following list; scroll and collect repeatedly to include more accounts. Instagram may rate-limit or change its page layout. Not affiliated with Instagram or Meta.
 
 ## License
 MIT
