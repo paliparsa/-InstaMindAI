@@ -41,7 +41,7 @@ function extractJsonAccounts(data,filename){
 }
 function reconcileFollowingSnapshot(existingRecords,incomingRecords,timestamp=new Date().toISOString()){
  const map=new Map((Array.isArray(existingRecords)?existingRecords:[]).map(x=>[String(x.username||"").toLowerCase(),x]));
- for(const [key,old] of map){const rel=Array.isArray(old.relationshipTypes)?old.relationshipTypes:[];if(rel.includes("following"))map.set(key,{...old,relationshipTypes:rel.filter(x=>x!=="following"),followingStatus:"not_in_latest_snapshot",followingSnapshotAt:timestamp})}
+ for(const [key,old] of map){const rel=Array.isArray(old.relationshipTypes)?old.relationshipTypes:[];if(rel.includes("following"))map.set(key,{...old,relationshipTypes:rel.filter(x=>x!=="following"),followingStatus:"pending_verification",followingSnapshotAt:timestamp})}
  let imported=0,duplicates=0;
  for(const incoming of (Array.isArray(incomingRecords)?incomingRecords:[])){
   const key=String(incoming.username||"").toLowerCase();if(!key)continue;const old=map.get(key);
@@ -50,20 +50,23 @@ function reconcileFollowingSnapshot(existingRecords,incomingRecords,timestamp=ne
  }
  return {records:[...map.values()],imported,duplicates};
 }
-function relationLabel(x){const a=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(x.followingStatus==="unfollowed_manually")return a.includes("followers")?"FOLLOWER · UNFOLLOWED":"UNFOLLOWED";if(x.followingStatus==="not_in_latest_snapshot")return a.includes("followers")?"FOLLOWER · NOT IN EXPORT":"NOT IN LATEST EXPORT";if(a.includes("followers")&&a.includes("following"))return "FOLLOWER + FOLLOWING";if(a.includes("followers"))return "FOLLOWER";if(a.includes("following"))return "FOLLOWING";return "IMPORTED"}
+function relationshipState(x){const rel=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(["unfollowed","unfollowed_manually"].includes(x.followingStatus))return "unfollowed";if(x.followingStatus==="following"||rel.includes("following"))return "following";return "pending_verification"}
+function relationshipLabel(state){return state==="following"?"Following":state==="unfollowed"?"Unfollowed":"Pending verification"}
+function relationLabel(x){const a=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(x.followingStatus==="unfollowed"||x.followingStatus==="unfollowed_manually")return a.includes("followers")?"FOLLOWER · UNFOLLOWED":"UNFOLLOWED";if(x.followingStatus==="pending_verification"||x.followingStatus==="not_in_latest_snapshot")return a.includes("followers")?"FOLLOWER · PENDING":"PENDING VERIFICATION";if(a.includes("followers")&&a.includes("following"))return "FOLLOWER + FOLLOWING";if(a.includes("followers"))return "FOLLOWER";if(a.includes("following"))return "FOLLOWING";return "IMPORTED"}
 function profileUrl(x){return "https://www.instagram.com/"+encodeURIComponent(x.username)+"/"}
 function openReview(query){browser.tabs.create({url:browser.runtime.getURL("review.html"+query)})}
 function status(message,error=false){$("status").textContent=message;$("status").classList.toggle("error",error)}
 async function load(){const d=await browser.storage.local.get("accounts");records=Array.isArray(d.accounts)?d.accounts:[];render()}
+browser.storage.onChanged?.addListener((changes,area)=>{if(area==="local"&&changes.accounts){records=Array.isArray(changes.accounts.newValue)?changes.accounts.newValue:[];render()}})
 async function save(){await browser.storage.local.set({accounts:records});render()}
 function filtered(){const q=$("search").value.trim().toLowerCase(),f=$("filter").value;return records.filter(x=>{
  const rel=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[],text=[x.username,x.displayText,x.analysis?.bioSummary,(x.analysis?.contentCategories||[]).join(" "),(x.analysis?.contentFlags||[]).join(" ")].join(" ").toLowerCase();
- return (!q||text.includes(q))&&(f==="all"||(f==="followers"&&rel.includes("followers"))||(f==="following"&&rel.includes("following"))||(f==="both"&&rel.includes("followers")&&rel.includes("following"))||(f==="keep"&&x.status==="keep")||(f==="review"&&x.status!=="keep")||(f==="unreviewed"&&!x.analysis)||(f==="flagged"&&x.flaggedForReview));
+ return (!q||text.includes(q))&&(f==="all"||(f==="followers"&&rel.includes("followers"))||(f==="following"&&relationshipState(x)==="following")||(f==="unfollowed"&&relationshipState(x)==="unfollowed")||(f==="pending"&&relationshipState(x)==="pending_verification")||(f==="both"&&rel.includes("followers")&&rel.includes("following"))||(f==="keep"&&x.status==="keep")||(f==="review"&&x.status!=="keep")||(f==="unreviewed"&&!x.analysis)||(f==="flagged"&&x.flaggedForReview));
 })}
 function makeButton(label,title,handler,extra=""){const b=document.createElement("button");b.className="mini "+extra;b.type="button";b.textContent=label;b.title=title;b.addEventListener("click",handler);return b}
 function render(){
  const list=filtered(),pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));page=Math.min(Math.max(1,page),pages);const start=(page-1)*PAGE_SIZE,items=list.slice(start,start+PAGE_SIZE);
- $("total").textContent=records.length;$("followers").textContent=records.filter(x=>x.relationshipTypes?.includes("followers")).length;$("following").textContent=records.filter(x=>x.relationshipTypes?.includes("following")).length;$("kept").textContent=records.filter(x=>x.status==="keep").length;
+ $("total").textContent=records.length;$("followers").textContent=records.filter(x=>x.relationshipTypes?.includes("followers")).length;$("following").textContent=records.filter(x=>relationshipState(x)==="following").length;$("unfollowed").textContent=records.filter(x=>relationshipState(x)==="unfollowed").length;$("pending").textContent=records.filter(x=>relationshipState(x)==="pending_verification").length;$("kept").textContent=records.filter(x=>x.status==="keep").length;
  $("range").textContent=list.length?("Showing "+(start+1)+"–"+Math.min(start+PAGE_SIZE,list.length)+" of "+list.length):"0 accounts";$("pageSize").textContent=PAGE_SIZE+" per page";
  $("clearSearch").hidden=!$("search").value;$("accounts").textContent="";
  if(!items.length){const empty=document.createElement("div");empty.className="empty";empty.textContent=records.length?"No accounts match these filters. Import a JSON file or change the search.":"No accounts yet. Import your Instagram followers/following JSON or collect visible accounts from Instagram."; $("accounts").append(empty)}
@@ -72,7 +75,7 @@ function render(){
   if(x.avatarUrl?.startsWith("https://")){const img=document.createElement("img");img.className="avatar";img.src=x.avatarUrl;img.alt="";img.loading="lazy";row.append(img)}else{const avatar=document.createElement("div");avatar.className="avatar";avatar.textContent=(x.username||"?")[0].toUpperCase();row.append(avatar)}
   const info=document.createElement("div");info.className="info";const name=document.createElement("strong");name.textContent="@"+x.username;const detail=document.createElement("small");detail.textContent=x.analysis?.contentFlags?.length?"Flagged: "+x.analysis.contentFlags.join(", "):(x.analysis?.contentCategories?.join(" · ")||x.displayText||"Not analyzed");info.append(name,detail);row.append(info);
   const rel=document.createElement("span");rel.className="relation";rel.textContent=relationLabel(x);row.append(rel);
-  const tag=document.createElement("span");tag.className="tag "+(x.status==="keep"?"keep":"")+(x.flaggedForReview?" flagged":"");tag.textContent=x.followingStatus==="unfollowed_manually"?"UNFOLLOWED":(x.followingStatus==="not_in_latest_snapshot"?"NOT IN LATEST EXPORT":(x.status==="keep"?"KEEP":(x.flaggedForReview?"FLAGGED":(x.analysis?"REVIEWED":"REVIEW"))));row.append(tag);
+  const relState=relationshipState(x),tag=document.createElement("span");tag.className="tag relationship-state "+relState;tag.textContent=relationshipLabel(relState);tag.title=relState==="following"?"هنوز فالو می‌کنی.":relState==="unfollowed"?"آنفالو شده.":"هنوز وضعیت نهایی تأیید نشده.";row.append(tag);
   row.append(makeButton("Open","Open Instagram profile",()=>browser.tabs.create({url:profileUrl(x),active:true})),makeButton("Review","Analyze this profile",()=>openReview("?username="+encodeURIComponent(x.username)),"review-mini"),makeButton(x.status==="keep"?"Undo":"Keep",x.status==="keep"?"Remove Keep status":"Keep this account",async()=>{x.status=x.status==="keep"?"review":"keep";await save()}));
   row.append(makeButton("×","Delete this account",async()=>{if(!confirm("Delete @"+x.username+" from your local account list?"))return;records=records.filter(a=>a.username.toLowerCase()!==x.username.toLowerCase());await save();status("@"+x.username+" deleted.")},"delete-one"));
   $("accounts").append(row);
