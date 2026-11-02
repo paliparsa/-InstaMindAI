@@ -13,6 +13,9 @@ Firefox WebExtension for reviewing Instagram accounts you follow. The same codeb
 - Review results show sampled image findings and distinguish skipped image review from completed analysis.
 - No automated likes, follows, messages, or unfollows.
 
+## Child-suitability image screening
+The optional Gemini Vision review now checks up to two randomly sampled visible post thumbnails for revealing swimwear, underwear, visible cleavage or exposed chest, exposed upper thighs, partial exposure, nudity, explicit sexual activity, and adult promotion. These are conservative manual-review warnings, not conclusions about a person. The model must not infer gender, identity, age, or other personal traits. Only sampled thumbnails are checked, so results are not exhaustive and should be verified manually.
+
 ## Account manager and JSON import
 Open **Account manager** from the extension popup to view the full account library in a separate tab. Import one or more JSON files from your Instagram data download (such as `followers_1.json` and `following.json`) or an InstaMind JSON export. The importer reads files locally, recognizes Instagram relationship entries, merges duplicate usernames, and preserves existing Keep labels and AI review results. Search and relationship/status filters are available; the list is paginated at exactly 25 accounts per page. Each row keeps the Open, Review, and Keep actions, and bulk review works with the imported accounts too.
 
