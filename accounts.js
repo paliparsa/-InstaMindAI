@@ -3,7 +3,7 @@ globalThis.browser = globalThis.browser || globalThis.chrome;
 const $=id=>document.getElementById(id),PAGE_SIZE=25;
 let records=[],page=1;
 const reserved=new Set(["accounts","about","explore","direct","reels","stories","p","developer","legal","web","directory","challenge"]);
-function usernameFromUrl(value){try{const u=new URL(value);if(u.protocol!=="https:"||!["instagram.com","www.instagram.com"].includes(u.hostname.toLowerCase()))return null;const parts=u.pathname.split("/").filter(Boolean);if(parts.length!==1)return null;return validUsername(parts[0])}catch(_){return null}}
+function usernameFromUrl(value){try{const u=new URL(value);if(u.protocol!=="https:"||!["instagram.com","www.instagram.com"].includes(u.hostname.toLowerCase()))return null;const parts=u.pathname.split("/").filter(Boolean);const candidate=parts.length===1?parts[0]:(parts.length===2&&parts[0].toLowerCase()==="_u"?parts[1]:null);return validUsername(candidate)}catch(_){return null}}
 function validUsername(value){if(typeof value!=="string")return null;let v=value.trim().replace(/^@/,"");if(!/^[a-zA-Z0-9._]{1,30}$/.test(v)||reserved.has(v.toLowerCase()))return null;return v}
 function relationFromName(name,fallback="unknown"){const s=String(name||"").toLowerCase();if(/followings?|relationships_following/.test(s))return "following";if(/followers?|relationships_followers/.test(s))return "followers";return fallback}
 function entryUsername(entry){
@@ -18,10 +18,10 @@ function entryUsername(entry){
  return null;
 }
 function extractJsonAccounts(data,filename){
- const fallback=relationFromName(filename,"unknown"),found=[];
- function add(entry,relation){const username=entryUsername(entry);if(!username)return;const old=found.find(x=>x.username.toLowerCase()===username.toLowerCase());if(old){if(!old.relationshipTypes.includes(relation))old.relationshipTypes.push(relation);return}
+ const fallback=relationFromName(filename,"unknown"),foundByUsername=new Map();
+ function add(entry,relation){const username=entryUsername(entry);if(!username)return;const key=username.toLowerCase(),old=foundByUsername.get(key);if(old){if(relation!=="unknown"&&!old.relationshipTypes.includes(relation))old.relationshipTypes.push(relation);return}
   const profileUrl="https://www.instagram.com/"+encodeURIComponent(username)+"/";
-  found.push({username,profileUrl,status:entry?.status||"review",displayText:typeof entry?.displayText==="string"?entry.displayText:"",avatarUrl:typeof entry?.avatarUrl==="string"&&entry.avatarUrl.startsWith("https://")?entry.avatarUrl:"",relationshipTypes:[...new Set([...(Array.isArray(entry?.relationshipTypes)?entry.relationshipTypes:[]),...(relation==="unknown"?[]:[relation])])],importSources:[...new Set([...(Array.isArray(entry?.importSources)?entry.importSources:[]),filename])],importedAt:entry?.importedAt||new Date().toISOString(),collectedAt:entry?.collectedAt||new Date().toISOString(),analysis:entry?.analysis||null,flaggedForReview:!!entry?.flaggedForReview,followBackStatus:entry?.followBackStatus||"unknown"});
+  foundByUsername.set(key,{username,profileUrl,status:entry?.status||"review",displayText:typeof entry?.displayText==="string"?entry.displayText:"",avatarUrl:typeof entry?.avatarUrl==="string"&&entry.avatarUrl.startsWith("https://")?entry.avatarUrl:"",relationshipTypes:[...new Set([...(Array.isArray(entry?.relationshipTypes)?entry.relationshipTypes:[]),...(relation==="unknown"?[]:[relation])])],importSources:[...new Set([...(Array.isArray(entry?.importSources)?entry.importSources:[]),filename])],importedAt:entry?.importedAt||new Date().toISOString(),collectedAt:entry?.collectedAt||new Date().toISOString(),analysis:entry?.analysis||null,flaggedForReview:!!entry?.flaggedForReview,followBackStatus:entry?.followBackStatus||"unknown"});
  }
  function visit(node,relation="unknown",key=""){
   if(Array.isArray(node)){for(const item of node){if(item&&typeof item==="object"&&Array.isArray(item.string_list_data))add(item,relation);else if(typeof item==="string")add(item,relation);else if(item&&typeof item==="object"&&(item.username||item.user_name||item.handle||item.profileUrl))add(item,relation)}return}
@@ -37,7 +37,7 @@ function extractJsonAccounts(data,filename){
   if(top.length){for(const k of top)visit(data[k],relationFromName(k,fallback),k)}
   else if(data.username||data.user_name||data.handle||data.profileUrl)visit([data],fallback,filename);
  }
- return found;
+ return [...foundByUsername.values()];
 }
 function relationLabel(x){const a=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(a.includes("followers")&&a.includes("following"))return "FOLLOWER + FOLLOWING";if(a.includes("followers"))return "FOLLOWER";if(a.includes("following"))return "FOLLOWING";return "IMPORTED"}
 function profileUrl(x){return "https://www.instagram.com/"+encodeURIComponent(x.username)+"/"}
@@ -73,7 +73,7 @@ async function importFiles(files){
  if(!files.length)return;let imported=0,duplicates=0,failed=[];const map=new Map(records.map(x=>[x.username.toLowerCase(),x]));
  for(const file of files){
   if(!file.name.toLowerCase().endsWith(".json")&&!["application/json","text/json"].includes(file.type)){failed.push(file.name+": not a JSON file");continue}
-  if(file.size>20*1024*1024){failed.push(file.name+": file exceeds 20 MB");continue}
+  if(file.size>50*1024*1024){failed.push(file.name+": file exceeds 50 MB");continue}
   try{
    const data=JSON.parse(await file.text()),parsed=extractJsonAccounts(data,file.name);if(!parsed.length){failed.push(file.name+": no Instagram accounts were recognized");continue}
    for(const incoming of parsed){const key=incoming.username.toLowerCase(),old=map.get(key);if(old){duplicates++;const merged={...incoming,...old,relationshipTypes:[...new Set([...(old.relationshipTypes||[]),...(incoming.relationshipTypes||[])])],importSources:[...new Set([...(old.importSources||[]),...(incoming.importSources||[])])],avatarUrl:old.avatarUrl||incoming.avatarUrl,displayText:old.displayText||incoming.displayText};map.set(key,merged)}else{map.set(key,incoming);imported++}}
