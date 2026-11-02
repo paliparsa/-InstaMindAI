@@ -24,3 +24,5 @@
 .manager-status.error,.delete-all:hover,.delete-one:hover{color:#fff;background:#171717;border-color:#fff}
 .page-btn:hover:not(:disabled),.page-number:hover{background:#171717;border-color:#fff;color:#fff}
 .manager-page .account .tag,.manager-page .account .relation{color:#fff;border-color:#555}
+
+.manager-page .account .relationship-state.following{color:#59cf8a;border-color:#286c45}.manager-page .account .relationship-state.unfollowed{color:#ff7777;border-color:#783c3c}.manager-page .account .relationship-state.pending_verification{color:#e8b75c;border-color:#775b2d}
