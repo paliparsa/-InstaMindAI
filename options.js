@@ -20,7 +20,7 @@ globalThis.browser = globalThis.browser || globalThis.chrome;
   if(!state[type].length){const empty=document.createElement("p");empty.className="note";empty.textContent="No models added. Add a model below to enable this analysis.";root.append(empty);return}
   state[type].forEach((model,index)=>{
    const row=document.createElement("div");row.className="model-row";row.draggable=true;row.dataset.index=String(index);
-   const drag=document.createElement("button");drag.type="button";drag.className="drag-handle";drag.textContent="⠿";drag.title="Drag to reorder";drag.setAttribute("aria-label","Drag model "+model+" to reorder");
+   const drag=document.createElement("span");drag.className="drag-handle";drag.textContent="⠿";drag.setAttribute("aria-hidden","true");
    const input=document.createElement("input");input.className="model-input";input.type="text";input.value=model;input.spellcheck=false;input.autocomplete="off";input.setAttribute("aria-label","Model ID, priority "+(index+1));input.addEventListener("input",()=>{state[type][index]=input.value.trim()});
    const up=document.createElement("button");up.type="button";up.className="move-model";up.textContent="↑";up.title="Move up";up.setAttribute("aria-label","Move "+model+" up");up.disabled=index===0;up.addEventListener("click",()=>reorder(type,index,index-1));
    const down=document.createElement("button");down.type="button";down.className="move-model";down.textContent="↓";down.title="Move down";down.setAttribute("aria-label","Move "+model+" down");down.disabled=index===state[type].length-1;down.addEventListener("click",()=>reorder(type,index,index+1));
