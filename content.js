@@ -15,13 +15,16 @@ globalThis.browser = globalThis.browser || globalThis.chrome;
   function profile(){
     const parts=location.pathname.split("/").filter(Boolean),name=parts.length===1?username(location.pathname):null;if(!name)return null;
     const main=document.querySelector("main")||document.body,meta=document.querySelector('meta[property="og:description"]'),visibleText=(main.innerText||"").trim().slice(0,12000);
+    const notFoundPatterns=[/sorry, this page (?:isn't|is not) available/i,/the link you followed may be broken, or the page may have been removed/i,/user not found/i,/this page isn't available/i,/page not found/i,/bu sayfa kullanılamıyor/i,/sayfa bulunamadı/i,/این صفحه در دسترس نیست/i,/صفحه مورد نظر پیدا نشد/i];
+    const pageEvidence=[visibleText,meta?.content||"",document.title].join("\\n");
+    if(notFoundPatterns.some(pattern=>pattern.test(pageEvidence)))return {username:name,profileUrl:base+encodeURIComponent(name)+"/",profileStatus:"not_found",notFoundEvidence:"Instagram displayed an explicit unavailable or not-found message.",collectedAt:new Date().toISOString()};
     const imgs=[...main.querySelectorAll("img")].filter(i=>{const r=i.getBoundingClientRect();return r.width>30&&r.height>30}).slice(0,24).map(i=>({alt:(i.alt||"").slice(0,240),caption:(i.getAttribute("aria-label")||"").slice(0,160)}));
     const followBackMatch=visibleText.match(/\bFollows you\b|Seni takip ediyor|شما را دنبال می‌کند|دنبال‌کننده شماست/i);
     const posts=new Map();
     main.querySelectorAll('a[href*="/p/"],a[href*="/reel/"]').forEach(a=>{const href=a.href;const img=a.querySelector("img");if(!img||!img.currentSrc||!/^https:\/\//i.test(img.currentSrc))return;if(!posts.has(href))posts.set(href,{url:img.currentSrc,postUrl:href,alt:(img.alt||"").slice(0,240)})});
     const candidates=[...posts.values()];for(let i=candidates.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]]}
     const sample=candidates.slice(0,2);
-    return {username:name,profileUrl:base+encodeURIComponent(name)+"/",pageTitle:document.title,metaDescription:meta?.content||"",visibleText,visibleImageDescriptions:imgs,followsYouEvidence:followBackMatch?.[0]||null,visiblePostImages:sample,collectedAt:new Date().toISOString()};
+    return {username:name,profileUrl:base+encodeURIComponent(name)+"/",profileStatus:"available",pageTitle:document.title,metaDescription:meta?.content||"",visibleText,visibleImageDescriptions:imgs,followsYouEvidence:followBackMatch?.[0]||null,visiblePostImages:sample,collectedAt:new Date().toISOString()};
   }
   browser.runtime.onMessage.addListener(msg=>{if(msg?.type==="COLLECT_FOLLOWING")return Promise.resolve({ok:true,accounts:collect(),url:location.href});if(msg?.type==="READ_PROFILE")return Promise.resolve({ok:true,profile:profile(),url:location.href});return undefined});
 })();
