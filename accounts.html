@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InstaMind · Account manager</title>
+<link rel="stylesheet" href="popup.css"><link rel="stylesheet" href="accounts.css">
+</head>
+<body class="manager-page">
+<header><div class="mark">IM</div><div><h1>InstaMind <b>AI</b></h1><small>Account manager</small></div><button id="settings" class="gear" title="Settings" aria-label="Open settings">⚙</button></header>
+<main class="manager-main">
+<section class="manager-heading"><div><small>YOUR ACCOUNT LIBRARY</small><h2>Accounts</h2><p>Import your Instagram followers or following JSON, or combine them with accounts collected in the browser.</p></div><button id="reviewAll" class="primary bulk-review">Review all</button></section>
+<section class="import-panel" aria-labelledby="importTitle">
+<div class="import-copy"><strong id="importTitle">Import Instagram JSON</strong><p>Choose one or more JSON files from your Instagram download, or an InstaMind JSON export. Existing accounts and review notes are preserved.</p></div>
+<div class="import-controls"><label class="file-pick" for="jsonFiles">Choose JSON files</label><input id="jsonFiles" type="file" accept=".json,application/json" multiple><span id="fileNames" class="file-names">No files selected</span><button id="import" class="secondary" disabled>Import selected</button></div>
+<p class="import-hint">Supports followers_1.json, following.json, nested Instagram relationship exports, plain username lists and InstaMind exports. Files are read locally and are not uploaded.</p>
+</section>
+<section class="manager-stats">
+<div><strong id="total">0</strong><small>Total accounts</small></div>
+<div><strong id="followers">0</strong><small>Followers</small></div>
+<div><strong id="following">0</strong><small>Following</small></div>
+<div><strong id="kept">0</strong><small>Kept</small></div>
+</section>
+<section class="list-toolbar">
+<div class="search-wrap"><input id="search" type="search" placeholder="Search username or bio…" aria-label="Search accounts"><button id="clearSearch" class="clear-search" type="button" aria-label="Clear search" hidden>×</button></div>
+<select id="filter" aria-label="Filter accounts"><option value="all">All accounts</option><option value="followers">Followers</option><option value="following">Following</option><option value="both">Followers & following</option><option value="keep">Kept</option><option value="review">To review</option><option value="unreviewed">Not analyzed</option><option value="flagged">Flagged</option></select>
+</section>
+<div class="list-meta"><span id="range">0 accounts</span><span id="pageSize">25 per page</span></div>
+<section id="accounts" aria-live="polite"></section>
+<nav class="pagination" aria-label="Account pages"><button id="firstPage" class="page-btn" disabled aria-label="First page">«</button><button id="prevPage" class="page-btn" disabled>Previous</button><div id="pageNumbers" class="page-numbers"></div><button id="nextPage" class="page-btn" disabled>Next</button><button id="lastPage" class="page-btn" disabled aria-label="Last page">»</button></nav>
+<p id="status" class="manager-status" role="status">Your accounts are stored locally in this browser.</p>
+<footer class="manager-footer"><button id="exportJson">Export JSON</button><button id="exportCsv">Export CSV</button><button id="back">Back to extension</button></footer>
+</main><script src="accounts.js"></script>
+</body></html>
