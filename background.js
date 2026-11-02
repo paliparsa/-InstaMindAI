@@ -38,7 +38,7 @@ async function analyzeText(profile){
  const request=await requestWithModelFallback(cfg.apiKey,models,[{text:prompt}],"text");
  if(!request.ok)return {ok:false,error:request.error,rateLimitedModels:request.rateLimitedModels||[]};
  const raw=request.data?.candidates?.[0]?.content?.parts?.[0]?.text;if(!raw)return {ok:false,error:"Empty text-analysis response.",model:request.model};
- try{return {ok:true,result:JSON.parse(raw),model:request.model,rateLimitedModels:request.rateLimitedModels}}catch(_){return {ok:false,error:"Text model returned invalid JSON.",model:request.model}}
+ try{return {ok:true,result:JSON.parse(raw),model:request.model,rateLimitedModels:request.rateLimitedModels,skippedModels:request.skippedModels}}catch(_){return {ok:false,error:"Text model returned invalid JSON.",model:request.model}}
 }
 async function analyzeImages(profile){
  const cfg=await browser.storage.local.get(["visionApiKey"]);if(!cfg.visionApiKey)return {ok:true,skipped:true,reason:"Vision API key not configured."};
@@ -54,7 +54,7 @@ async function analyzeImages(profile){
   const models=await getModelList("visionModels","visionModel","gemini-2.5-flash"),request=await requestWithModelFallback(cfg.visionApiKey,models,parts,"vision");
   if(!request.ok)return {ok:false,error:request.error,rateLimitedModels:request.rateLimitedModels||[]};
   const raw=request.data?.candidates?.[0]?.content?.parts?.[0]?.text;if(!raw)return {ok:false,error:"Empty vision-analysis response.",model:request.model};
-  try{return {ok:true,result:JSON.parse(raw),sampledImages:parts.filter(p=>p.inlineData).length,model:request.model,rateLimitedModels:request.rateLimitedModels}}catch(_){return {ok:false,error:"Vision model returned invalid JSON.",model:request.model}}
+  try{return {ok:true,result:JSON.parse(raw),sampledImages:parts.filter(p=>p.inlineData).length,model:request.model,rateLimitedModels:request.rateLimitedModels,skippedModels:request.skippedModels}}catch(_){return {ok:false,error:"Vision model returned invalid JSON.",model:request.model}}
  }catch(e){return {ok:false,error:e.message||"Vision-analysis network error."}}
 }
 browser.runtime.onMessage.addListener(async msg=>{if(msg?.type==="AI_ANALYZE")return analyzeText(msg.profile);if(msg?.type==="AI_ANALYZE_IMAGES")return analyzeImages(msg.profile);return undefined});
