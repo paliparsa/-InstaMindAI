@@ -35,7 +35,7 @@ Open Settings. Add the text-analysis Gemini API key and model ID. For image anal
 
 ## Consent and privacy
 - InstaMind does not extract or store Instagram password, cookie values, session tokens, DMs, or private content. When you click **Scan Following**, the browser's already signed-in session is used to request Instagram's own Following and Followers list endpoints.
-- Relationship scan results and account records stay in extension local storage. Profile text and sampled images are sent to Google Gemini only when you separately opt in to AI review.
+- The first full relationship scan requests explicit website-content consent. Scan results and account records stay in extension local storage; the scan does not send account lists to Gemini. Profile text and sampled images are sent to Google Gemini only when you separately opt in to AI review.
 - Before a review, explicitly consent to sending visible profile text and up to two randomly sampled visible post thumbnails to Google Gemini. Thumbnails are sent only if the separate Vision key is configured. This update requests consent again because images are a new data category.
 - API keys are stored in browser extension local storage and are not included in exports.
 - Does not infer gender, sex, age, identity, ethnicity, religion, sexual orientation, health, or other sensitive traits from photos, faces, names, usernames, or indirect clues. Pronouns are shown only when explicitly self-described in profile text.
