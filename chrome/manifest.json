@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "InstaMind AI",
+  "version": "0.2.2",
+  "description": "A privacy-conscious assistant for reviewing Instagram accounts you follow.",
+  "minimum_chrome_version": "111",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "downloads",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.instagram.com/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "action": {
+    "default_title": "InstaMind AI",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.instagram.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
