@@ -54,3 +54,5 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 .review-mini{border-color:#43547f;color:#bdcbff}
 .review-mini:hover{background:#202a43}
+
+.tag.flagged{color:#e9c58b;font-weight:800}.review-mini{border-color:#43547f;color:#bdcbff}
