@@ -15,3 +15,7 @@
 .manager-footer button{color:#fff}.delete-all,.delete-one{background:#000;color:#fff;border-color:#777}
 .manager-page .account{border-color:#292929}.manager-page .info small{color:rgba(255,255,255,.62)}
 .manager-page button:focus-visible,.manager-page input:focus-visible,.manager-page select:focus-visible,.manager-page label:focus-visible{outline-color:#fff}
+
+.manager-status.error,.delete-all:hover,.delete-one:hover{color:#fff;background:#171717;border-color:#fff}
+.page-btn:hover:not(:disabled),.page-number:hover{background:#171717;border-color:#fff;color:#fff}
+.manager-page .account .tag,.manager-page .account .relation{color:#fff;border-color:#555}
