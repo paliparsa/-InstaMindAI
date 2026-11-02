@@ -86,7 +86,7 @@ async function start(){
  if(checkpoint&&checkpoint.scope!==scope){say("Another review queue is paused. Resume it from its original Review page before starting a different queue.",true);return}
  let queue=[],startAt=0;
  if(checkpoint&&checkpoint.scope===scope&&Array.isArray(checkpoint.queue)){
-  const byName=new Map(records.map(x=>[String(x.username||"").toLowerCase(),x]));queue=checkpoint.queue.map(name=>byName.get(String(name).toLowerCase())).filter(Boolean);startAt=Math.min(Number(checkpoint.nextIndex)||0,queue.length);
+  const byName=new Map(records.map(x=>[String(x.username||"").toLowerCase(),x]));const checkpointIndex=Math.max(0,Number(checkpoint.nextIndex)||0);startAt=checkpoint.queue.slice(0,checkpointIndex).filter(name=>byName.has(String(name).toLowerCase())).length;queue=checkpoint.queue.map(name=>byName.get(String(name).toLowerCase())).filter(Boolean);startAt=Math.min(startAt,queue.length);
  }
  if(!queue.length){queue=one?records.filter(x=>x.username?.toLowerCase()===one.toLowerCase()):records.slice();startAt=0}
  if(one&&!queue.length){say("This account is not in your collected list.",true);return}if(!queue.length){say("No accounts to review. Collect your Following list first.",true);return}
