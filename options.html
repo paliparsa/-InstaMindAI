@@ -1,1 +1,74 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>InstaMind Settings</title><link rel="stylesheet" href="popup.css"><style>body{width:auto;max-width:650px;margin:36px auto;padding:0 20px}.card{padding:22px;background:#141720;border:1px solid #292e3a;border-radius:14px}.section{padding:16px 0;border-bottom:1px solid #292e3a}label{display:block;margin:14px 0 6px;color:#cbd1df}input,select{width:100%;padding:11px;background:#0b0c10;border:1px solid #292e3a;border-radius:8px;color:white;font:inherit}.note{font-size:12px;color:#929bad;line-height:1.6}.primary{margin-top:18px}.saved{color:#79d6ad;min-height:20px}</style></head><body><header><div class="mark">IM</div><div><h1>InstaMind <b>AI</b></h1><small>Extension settings</small></div></header><main class="card"><h2>AI settings</h2><p class="note">Both integrations use Google Gemini, but their API keys and model IDs are stored separately in this browser's extension storage and are never included in exports.</p><section class="section"><h3>Text analysis</h3><label for="model">Text model ID</label><input id="model" value="gemini-2.0-flash"><label for="key">Text analysis API key</label><input id="key" type="password" placeholder="Google AI API key" autocomplete="off"></section><section class="section"><h3>Image analysis (optional)</h3><p class="note">When configured, each profile review randomly samples up to 2 post thumbnails currently visible on that profile and sends them to this separate Gemini Vision model. This is used only to identify clearly explicit content, not to identify people or infer personal traits.</p><label for="visionModel">Image model ID</label><input id="visionModel" value="gemini-2.5-flash"><label for="visionKey">Separate image-analysis API key</label><input id="visionKey" type="password" placeholder="Separate Google AI API key" autocomplete="off"></section><button id="save" class="primary">Save settings</button><p id="status" class="saved"></p><hr style="border:0;border-top:1px solid #292e3a;margin:24px 0"><h3>Privacy</h3><p class="note">No Instagram password, cookies, DMs or private data are collected. On review, visible profile text and up to two randomly sampled visible post thumbnails may be sent to Google Gemini only after explicit consent. The text and image API keys are separate. Consent is requested again after this update. Gender and other sensitive traits are never inferred from photos, names or faces. No likes, follows, messages or unfollows are performed.</p></main><script src="options.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InstaMind AI — Settings</title>
+<link rel="stylesheet" href="popup.css">
+<style>
+body{width:auto;max-width:760px;margin:34px auto;padding:0 20px 48px}
+.settings-card{padding:24px;background:#141720;border:1px solid #292e3a;border-radius:14px}
+.intro{max-width:650px;color:#929bad;font-size:13px;line-height:1.65}
+.settings-section{padding:20px 0;border-bottom:1px solid #292e3a}
+.settings-section:last-of-type{border-bottom:0}
+.settings-section h3{margin:0 0 7px;font-size:15px}
+.field-label{display:block;margin:16px 0 7px;color:#cbd1df;font-size:13px}
+.settings-input,.model-input{width:100%;min-width:0;padding:11px 12px;background:#0b0c10;border:1px solid #343b4b;border-radius:8px;color:#f3f5f8;font:inherit;box-sizing:border-box}
+.settings-input:focus,.model-input:focus{outline:2px solid #6688ff;outline-offset:2px}
+.secret-row{display:flex;gap:8px}.secret-row .settings-input{flex:1}
+.secret-toggle,.move-model,.remove-model,.drag-handle{border:1px solid #343b4b;border-radius:8px;background:#10131a;color:#cbd1df;cursor:pointer}
+.secret-toggle{padding:0 12px;min-width:64px}
+.model-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 9px}
+.model-heading label{font-size:13px;color:#cbd1df;font-weight:600}
+.order-note,.note{font-size:12px;color:#929bad;line-height:1.6}
+.model-list{display:grid;gap:7px;margin:10px 0 14px}
+.model-row{display:grid;grid-template-columns:25px 1fr 30px 30px 34px;align-items:center;gap:7px;padding:8px;background:#0e1118;border:1px solid #292e3a;border-radius:9px}
+.model-row.dragging{opacity:.45;border-color:#6688ff}
+.model-row.drop-target{border-color:#6688ff;background:#151c2c}
+.drag-handle{width:25px;height:34px;padding:0;font-size:16px;cursor:grab;touch-action:none}
+.model-input{padding:8px 10px;font-size:13px}
+.move-model,.remove-model{width:30px;height:34px;padding:0;font-size:15px}
+.remove-model{color:#ffaaaa;border-color:#633b43}
+.move-model:disabled{opacity:.3;cursor:not-allowed}
+.drag-handle:focus-visible,.move-model:focus-visible,.remove-model:focus-visible,.secret-toggle:focus-visible,.add-model:focus-visible,.save-settings:focus-visible{outline:2px solid #6688ff;outline-offset:2px}
+.add-model-row{display:flex;gap:8px}.add-model-row input{flex:1}
+.add-model{padding:0 14px;min-height:40px;border:1px solid #3e5cae;border-radius:8px;background:#172443;color:#dce5ff;font-weight:700;cursor:pointer;white-space:nowrap}
+.save-settings{margin-top:20px;min-height:42px;padding:0 18px;border:0;border-radius:8px;background:#6688ff;color:#071020;font-weight:800;cursor:pointer}
+.saved{min-height:20px;margin:12px 0 0;color:#82d9b2;font-size:13px}
+.privacy{margin-top:24px;padding-top:18px;border-top:1px solid #292e3a}
+@media(max-width:560px){body{margin:18px auto;padding:0 12px 32px}.settings-card{padding:17px}.model-row{grid-template-columns:23px minmax(0,1fr) 28px 28px 30px;gap:5px}.move-model,.remove-model{width:28px}.model-heading{align-items:flex-start;flex-direction:column}}
+@media(prefers-reduced-motion:no-preference){.model-row{transition:border-color .12s,background .12s,opacity .12s}}
+</style>
+</head>
+<body>
+<header><div class="mark">IM</div><div><h1>InstaMind <b>AI</b></h1><small>Extension settings</small></div></header>
+<main class="settings-card">
+<h2>AI settings</h2>
+<p class="intro">Manage the models used for text and image analysis. Models are tried from top to bottom. If Gemini rate-limits a model, InstaMind automatically tries the next model in your list.</p>
+
+<section class="settings-section" aria-labelledby="text-title">
+<h3 id="text-title">Text analysis</h3>
+<label class="field-label" for="key">Text analysis API key</label>
+<div class="secret-row"><input class="settings-input" id="key" type="password" placeholder="Google AI API key" autocomplete="off"><button type="button" class="secret-toggle" data-target="key" aria-label="Show text API key">Show</button></div>
+<div class="model-heading"><label>Text model priority</label><span class="order-note">Drag to reorder · top model is tried first</span></div>
+<div id="textModels" class="model-list" aria-label="Text model priority list"></div>
+<div class="add-model-row"><input id="addTextModel" class="settings-input" placeholder="e.g. gemini-2.5-flash" aria-label="New text model ID"><button type="button" id="addText" class="add-model">Add model</button></div>
+</section>
+
+<section class="settings-section" aria-labelledby="image-title">
+<h3 id="image-title">Image analysis</h3>
+<p class="note">Optional. Uses a separate API key. Up to two sampled post thumbnails are checked for child-suitability concerns.</p>
+<label class="field-label" for="visionKey">Image analysis API key</label>
+<div class="secret-row"><input class="settings-input" id="visionKey" type="password" placeholder="Separate Google AI API key" autocomplete="off"><button type="button" class="secret-toggle" data-target="visionKey" aria-label="Show image API key">Show</button></div>
+<div class="model-heading"><label>Image model priority</label><span class="order-note">Drag to reorder · top model is tried first</span></div>
+<div id="visionModels" class="model-list" aria-label="Image model priority list"></div>
+<div class="add-model-row"><input id="addVisionModel" class="settings-input" placeholder="e.g. gemini-2.5-flash" aria-label="New image model ID"><button type="button" id="addVision" class="add-model">Add model</button></div>
+</section>
+
+<button id="save" class="save-settings">Save settings</button>
+<p id="status" class="saved" role="status" aria-live="polite"></p>
+<div class="privacy"><h3>Privacy</h3><p class="note">API keys and model lists are stored locally in this browser and are not included in account exports. On review, visible profile text and up to two randomly sampled visible post thumbnails may be sent to Google Gemini only after explicit consent. No gender, identity, age, or other sensitive traits are inferred from photos, names, or faces. No likes, follows, messages, or unfollows are performed.</p></div>
+</main>
+<script src="options.js"></script>
+</body>
+</html>
