@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — JSON import and paginated account manager
+- Added a dedicated account manager page opened in a new browser tab.
+- Import one or more Instagram followers/following JSON exports or InstaMind JSON exports.
+- Merge duplicate usernames while preserving existing Keep status, profile analysis, and imported relationship metadata.
+- Added follower/following filters, search, status filters, and pagination fixed at 25 accounts per page.
+- Added Open, Review, Keep/Undo, Review all, and JSON/CSV export actions to the account manager.
+- Files are parsed locally and are not uploaded.
+- Bumped Chrome and Firefox extension versions to 0.5.0.
+
 ## 0.4.0 — Optional Gemini Vision review for Firefox and Chrome
 - Added separate Gemini Vision API key and model settings, independent from the text-analysis key.
 - Profile reviews randomly sample up to two currently visible post thumbnails and submit them only when the separate image key is configured and the user has consented.

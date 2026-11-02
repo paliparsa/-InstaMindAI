@@ -25,5 +25,5 @@ Keep the existing restrained dark interface and royal-blue action color. Avoid g
 - Content flags must cite explicit visible text evidence; never infer sensitive traits from images or names.
 - Keep all data local except profile text the user explicitly consents to send to Gemini.
 
-## Accessibility
+## Account manager workflow\n- The account library opens in a dedicated browser tab, separate from the compact popup.\n- JSON imports are parsed locally; support Instagram followers/following exports and InstaMind exports.\n- Merge by normalized username and preserve prior status, analysis, and relationship data.\n- Search and filters reset pagination; each page shows at most 25 accounts.\n- Account rows retain Open, Review, and Keep/Undo actions; bulk review uses the existing sequential review queue.\n\n## Accessibility
 Use native buttons and form controls, visible focus, text labels for status, keyboard operation, and reduced-motion support. Preserve usable layout at narrow extension widths.
