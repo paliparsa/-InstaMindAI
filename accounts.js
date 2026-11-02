@@ -39,7 +39,18 @@ function extractJsonAccounts(data,filename){
  }
  return [...foundByUsername.values()];
 }
-function relationLabel(x){const a=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(a.includes("followers")&&a.includes("following"))return "FOLLOWER + FOLLOWING";if(a.includes("followers"))return "FOLLOWER";if(a.includes("following"))return "FOLLOWING";return "IMPORTED"}
+function reconcileFollowingSnapshot(existingRecords,incomingRecords,timestamp=new Date().toISOString()){
+ const map=new Map((Array.isArray(existingRecords)?existingRecords:[]).map(x=>[String(x.username||"").toLowerCase(),x]));
+ for(const [key,old] of map){const rel=Array.isArray(old.relationshipTypes)?old.relationshipTypes:[];if(rel.includes("following"))map.set(key,{...old,relationshipTypes:rel.filter(x=>x!=="following"),followingStatus:"not_in_latest_snapshot",followingSnapshotAt:timestamp})}
+ let imported=0,duplicates=0;
+ for(const incoming of (Array.isArray(incomingRecords)?incomingRecords:[])){
+  const key=String(incoming.username||"").toLowerCase();if(!key)continue;const old=map.get(key);
+  if(old){duplicates++;const rel=[...new Set([...(old.relationshipTypes||[]),...(incoming.relationshipTypes||[])])];const merged={...incoming,...old,relationshipTypes:rel,importSources:[...new Set([...(old.importSources||[]),...(incoming.importSources||[])])],avatarUrl:old.avatarUrl||incoming.avatarUrl,displayText:old.displayText||incoming.displayText};if(incoming.relationshipTypes?.includes("following")){merged.followingStatus="following";merged.followingSnapshotAt=timestamp}map.set(key,merged)}
+  else{imported++;const created={...incoming};if(incoming.relationshipTypes?.includes("following")){created.followingStatus="following";created.followingSnapshotAt=timestamp}map.set(key,created)}
+ }
+ return {records:[...map.values()],imported,duplicates};
+}
+function relationLabel(x){const a=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(x.followingStatus==="unfollowed_manually")return a.includes("followers")?"FOLLOWER · UNFOLLOWED":"UNFOLLOWED";if(x.followingStatus==="not_in_latest_snapshot")return a.includes("followers")?"FOLLOWER · NOT IN EXPORT":"NOT IN LATEST EXPORT";if(a.includes("followers")&&a.includes("following"))return "FOLLOWER + FOLLOWING";if(a.includes("followers"))return "FOLLOWER";if(a.includes("following"))return "FOLLOWING";return "IMPORTED"}
 function profileUrl(x){return "https://www.instagram.com/"+encodeURIComponent(x.username)+"/"}
 function openReview(query){browser.tabs.create({url:browser.runtime.getURL("review.html"+query)})}
 function status(message,error=false){$("status").textContent=message;$("status").classList.toggle("error",error)}
@@ -61,7 +72,7 @@ function render(){
   if(x.avatarUrl?.startsWith("https://")){const img=document.createElement("img");img.className="avatar";img.src=x.avatarUrl;img.alt="";img.loading="lazy";row.append(img)}else{const avatar=document.createElement("div");avatar.className="avatar";avatar.textContent=(x.username||"?")[0].toUpperCase();row.append(avatar)}
   const info=document.createElement("div");info.className="info";const name=document.createElement("strong");name.textContent="@"+x.username;const detail=document.createElement("small");detail.textContent=x.analysis?.contentFlags?.length?"Flagged: "+x.analysis.contentFlags.join(", "):(x.analysis?.contentCategories?.join(" · ")||x.displayText||"Not analyzed");info.append(name,detail);row.append(info);
   const rel=document.createElement("span");rel.className="relation";rel.textContent=relationLabel(x);row.append(rel);
-  const tag=document.createElement("span");tag.className="tag "+(x.status==="keep"?"keep":"")+(x.flaggedForReview?" flagged":"");tag.textContent=x.status==="keep"?"KEEP":(x.flaggedForReview?"FLAGGED":(x.analysis?"REVIEWED":"REVIEW"));row.append(tag);
+  const tag=document.createElement("span");tag.className="tag "+(x.status==="keep"?"keep":"")+(x.flaggedForReview?" flagged":"");tag.textContent=x.followingStatus==="unfollowed_manually"?"UNFOLLOWED":(x.followingStatus==="not_in_latest_snapshot"?"NOT IN LATEST EXPORT":(x.status==="keep"?"KEEP":(x.flaggedForReview?"FLAGGED":(x.analysis?"REVIEWED":"REVIEW"))));row.append(tag);
   row.append(makeButton("Open","Open Instagram profile",()=>browser.tabs.create({url:profileUrl(x),active:true})),makeButton("Review","Analyze this profile",()=>openReview("?username="+encodeURIComponent(x.username)),"review-mini"),makeButton(x.status==="keep"?"Undo":"Keep",x.status==="keep"?"Remove Keep status":"Keep this account",async()=>{x.status=x.status==="keep"?"review":"keep";await save()}));
   row.append(makeButton("×","Delete this account",async()=>{if(!confirm("Delete @"+x.username+" from your local account list?"))return;records=records.filter(a=>a.username.toLowerCase()!==x.username.toLowerCase());await save();status("@"+x.username+" deleted.")},"delete-one"));
   $("accounts").append(row);
@@ -70,17 +81,32 @@ function render(){
  const numbers=$("pageNumbers");numbers.textContent="";const lo=Math.max(1,Math.min(page-2,pages-4)),hi=Math.min(pages,lo+4);for(let n=lo;n<=hi;n++){const b=document.createElement("button");b.type="button";b.className="page-number";b.textContent=n;b.setAttribute("aria-label","Page "+n);if(n===page)b.setAttribute("aria-current","page");b.addEventListener("click",()=>{page=n;render();window.scrollTo({top:0,behavior:"smooth"})});numbers.append(b)}
 }
 async function importFiles(files){
- if(!files.length)return;let imported=0,duplicates=0,failed=[];const map=new Map(records.map(x=>[x.username.toLowerCase(),x]));
+ if(!files.length)return;
+ let imported=0,duplicates=0,failed=[],syncFollowingSnapshot=false;const incomingAll=[];
  for(const file of files){
-  if(!file.name.toLowerCase().endsWith(".json")&&!["application/json","text/json"].includes(file.type)){failed.push(file.name+": not a JSON file");continue}
+  if(!file.name.toLowerCase().endsWith(".json")&&![ "application/json","text/json"].includes(file.type)){failed.push(file.name+": not a JSON file");continue}
   if(file.size>50*1024*1024){failed.push(file.name+": file exceeds 50 MB");continue}
   try{
    const data=JSON.parse(await file.text()),parsed=extractJsonAccounts(data,file.name);if(!parsed.length){failed.push(file.name+": no Instagram accounts were recognized");continue}
-   for(const incoming of parsed){const key=incoming.username.toLowerCase(),old=map.get(key);if(old){duplicates++;const merged={...incoming,...old,relationshipTypes:[...new Set([...(old.relationshipTypes||[]),...(incoming.relationshipTypes||[])])],importSources:[...new Set([...(old.importSources||[]),...(incoming.importSources||[])])],avatarUrl:old.avatarUrl||incoming.avatarUrl,displayText:old.displayText||incoming.displayText};map.set(key,merged)}else{map.set(key,incoming);imported++}}
+   if($("followingSnapshot").checked&&relationFromName(file.name,"unknown")==="following")syncFollowingSnapshot=true;
+   incomingAll.push(...parsed);
   }catch(e){failed.push(file.name+": "+(e.message||"invalid JSON"))}
  }
- records=[...map.values()].sort((a,b)=>a.username.localeCompare(b.username));page=1;await browser.storage.local.set({accounts:records});render();
- const msg="Imported "+imported+" new accounts; merged "+duplicates+" existing entries."+ (failed.length?" Issues: "+failed.join(" | "):"");
+ let syncResult=null;
+ if(syncFollowingSnapshot)syncResult=reconcileFollowingSnapshot(records,incomingAll);
+ else{
+  const map=new Map(records.map(x=>[x.username.toLowerCase(),x]));
+  for(const incoming of incomingAll){
+   const key=incoming.username.toLowerCase(),old=map.get(key);
+   if(old){duplicates++;const rel=[...new Set([...(old.relationshipTypes||[]),...(incoming.relationshipTypes||[])])];map.set(key,{...incoming,...old,relationshipTypes:rel,importSources:[...new Set([...(old.importSources||[]),...(incoming.importSources||[])])],avatarUrl:old.avatarUrl||incoming.avatarUrl,displayText:old.displayText||incoming.displayText})}
+   else{map.set(key,incoming);imported++}
+  }
+  syncResult={records:[...map.values()],imported,duplicates};
+ }
+ imported=syncResult.imported;duplicates=syncResult.duplicates;
+ records=syncResult.records.sort((a,b)=>a.username.localeCompare(b.username));page=1;await browser.storage.local.set({accounts:records,...(syncFollowingSnapshot?{followingSnapshotImportedAt:new Date().toISOString()}: {})});render();
+ const syncMsg=syncFollowingSnapshot?" Following snapshot synchronized. Accounts absent from this export are marked “Not in latest export”.":"";
+ const msg="Imported "+imported+" new accounts; merged "+duplicates+" existing entries."+syncMsg+(failed.length?" Issues: "+failed.join(" | "):"");
  status(msg,failed.length>0);$("jsonFiles").value="";$("fileNames").textContent="No files selected";$("import").disabled=true;
 }
 async function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob);try{if(browser.downloads?.download){await browser.downloads.download({url,filename:name,saveAs:true});setTimeout(()=>URL.revokeObjectURL(url),60000);return}}catch(_){}const a=document.createElement("a");a.href=url;a.download=name;a.rel="noopener";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}

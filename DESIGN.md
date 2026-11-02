@@ -35,14 +35,15 @@ Use restrained 7–9px corner radii, 1px charcoal borders, flat black surfaces, 
 - Open navigates only; Review opens the profile in a background tab and analyzes it.
 - Bulk review is sequential, paced, visibly progressing, pausable after the current profile, and resumable from a locally persisted next-account checkpoint.
 - AI transmission requires explicit user consent.
-- Account actions remain user-controlled: review results can open a profile for a manual unfollow, but the extension does not automate likes, follows, messages, or unfollows.
+- Account actions remain user-controlled: review results provide Open profile and Mark as unfollowed. The latter only records the user's completed manual action locally; the extension never automates likes, follows, messages, or unfollows.
+- Following snapshots are refreshed by importing Instagram's official following.json export. Missing entries are labelled as absent from the latest export, not asserted to be confirmed unfollows. No Instagram session cookies or credentials are read.
 - Missing “Follows you” evidence is uncertain, not definitive proof of non-reciprocity.
 - Content flags must cite explicit visible text evidence; never infer sensitive traits from images or names.
 - Keep all data local except profile text the user explicitly consents to send to Gemini.
 
 ## Account manager workflow
 - The account library opens in a dedicated browser tab, separate from the compact popup.
-- JSON imports are parsed locally; support Instagram followers/following exports and InstaMind exports.
+- JSON imports are parsed locally; support Instagram followers/following exports and InstaMind exports. An explicit snapshot option treats following.json as the current Following list and removes stale Following labels.
 - Merge by normalized username and preserve prior status, analysis, and relationship data.
 - Search and filters reset pagination; each page shows at most 25 accounts.
 - Account rows retain Open, Review, and Keep/Undo actions; bulk review uses the existing sequential review queue.
