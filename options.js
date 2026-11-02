@@ -3,7 +3,8 @@ globalThis.browser = globalThis.browser || globalThis.chrome;
 (async()=>{
  const $=id=>document.getElementById(id);
  const defaults={textModels:["gemini-2.0-flash"],visionModels:["gemini-2.5-flash"]};
- const state={textModels:[],visionModels:[]};\n let dragging=null;
+ const state={textModels:[],visionModels:[]};
+ let dragging=null;
  const validModel=value=>/^[a-zA-Z0-9._-]{1,100}$/.test(value);
  const cleanModels=(value,fallback)=>{const source=Array.isArray(value)?value:fallback;return [...new Set(source.map(x=>String(x||"").trim()).filter(validModel))]};
  const initial=await browser.storage.local.get(["apiKey","model","visionApiKey","visionModel","textModels","visionModels"]);
