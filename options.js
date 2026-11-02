@@ -3,7 +3,7 @@ globalThis.browser = globalThis.browser || globalThis.chrome;
 (async()=>{
  const $=id=>document.getElementById(id);
  const defaults={textModels:["gemini-2.0-flash"],visionModels:["gemini-2.5-flash"]};
- const state={textModels:[],visionModels:[]};
+ const state={textModels:[],visionModels:[]};\n let dragging=null;
  const validModel=value=>/^[a-zA-Z0-9._-]{1,100}$/.test(value);
  const cleanModels=(value,fallback)=>{const source=Array.isArray(value)?value:fallback;return [...new Set(source.map(x=>String(x||"").trim()).filter(validModel))]};
  const initial=await browser.storage.local.get(["apiKey","model","visionApiKey","visionModel","textModels","visionModels"]);
@@ -11,7 +11,7 @@ globalThis.browser = globalThis.browser || globalThis.chrome;
  state.visionModels=cleanModels(initial.visionModels,[initial.visionModel||defaults.visionModels[0]]);
  $("key").value=initial.apiKey||"";
  $("visionKey").value=initial.visionApiKey||"";
- const syncInputs=type=>{const inputs=$($(type)).querySelectorAll(".model-input");state[type]=Array.from(inputs,input=>input.value.trim())};
+ const syncInputs=type=>{const inputs=$(type).querySelectorAll(".model-input");state[type]=Array.from(inputs,input=>input.value.trim())};
  function setStatus(message,error=false){$("status").textContent=message;$("status").style.color=error?"#ff9292":""}
  async function persistLists(message="Model order saved."){await browser.storage.local.set({textModels:state.textModels,visionModels:state.visionModels,model:state.textModels[0]||"",visionModel:state.visionModels[0]||""});setStatus(message)}
  function render(type){
@@ -25,11 +25,11 @@ globalThis.browser = globalThis.browser || globalThis.chrome;
    const down=document.createElement("button");down.type="button";down.className="move-model";down.textContent="↓";down.title="Move down";down.setAttribute("aria-label","Move "+model+" down");down.disabled=index===state[type].length-1;down.addEventListener("click",()=>reorder(type,index,index+1));
    const remove=document.createElement("button");remove.type="button";remove.className="remove-model";remove.textContent="×";remove.title="Remove model";remove.setAttribute("aria-label","Remove "+model);remove.addEventListener("click",async()=>{syncInputs(type);state[type].splice(index,1);render(type);await persistLists("Model removed from the priority list.")});
    row.append(drag,input,up,down,remove);
-   row.addEventListener("dragstart",event=>{syncInputs(type);row.classList.add("dragging");event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",String(index));event.dataTransfer.setData("application/x-instamind-model-list",type)});
-   row.addEventListener("dragend",()=>{row.classList.remove("dragging");root.querySelectorAll(".drop-target").forEach(el=>el.classList.remove("drop-target"))});
-   row.addEventListener("dragover",event=>{if(event.dataTransfer.getData("application/x-instamind-model-list")===type){event.preventDefault();row.classList.add("drop-target")}});
+   row.addEventListener("dragstart",event=>{syncInputs(type);dragging={type,index};row.classList.add("dragging");event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",String(index))});
+   row.addEventListener("dragend",()=>{row.classList.remove("dragging");dragging=null;root.querySelectorAll(".drop-target").forEach(el=>el.classList.remove("drop-target"))});
+   row.addEventListener("dragover",event=>{if(dragging?.type===type){event.preventDefault();row.classList.add("drop-target")}});
    row.addEventListener("dragleave",()=>row.classList.remove("drop-target"));
-   row.addEventListener("drop",async event=>{if(event.dataTransfer.getData("application/x-instamind-model-list")!==type)return;event.preventDefault();row.classList.remove("drop-target");const from=Number(event.dataTransfer.getData("text/plain"));syncInputs(type);await reorder(type,from,index)});
+   row.addEventListener("drop",async event=>{if(dragging?.type!==type)return;event.preventDefault();row.classList.remove("drop-target");const from=dragging.index;dragging=null;syncInputs(type);await reorder(type,from,index)});
    root.append(row);
   });
  }
