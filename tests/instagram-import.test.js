@@ -9,8 +9,8 @@ assert.notEqual(start, -1, "account import helpers must exist");
 assert.notEqual(end, -1, "account import helper boundary must exist");
 
 const sandbox = { URL, Date, Map, Set };
-vm.runInNewContext(source.slice(start, end) + "\nglobalThis.importApi = { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot };", sandbox);
-const { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot } = sandbox.importApi;
+vm.runInNewContext(source.slice(start, end) + "\nglobalThis.importApi = { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot, relationshipState };", sandbox);
+const { usernameFromUrl, extractJsonAccounts, reconcileFollowingSnapshot, relationshipState } = sandbox.importApi;
 
 assert.equal(usernameFromUrl("https://www.instagram.com/_u/sanamiriartist"), "sanamiriartist");
 assert.equal(usernameFromUrl("https://www.instagram.com/sanamiriartist/"), "sanamiriartist");
@@ -25,6 +25,8 @@ const sample = {
 const parsedSample = extractJsonAccounts(sample, "following.json");
 assert.equal(parsedSample.length, 1);
 assert.equal(parsedSample[0].username, "sanamiriartist");
+assert.equal(parsedSample[0].followingStatus, "following");
+assert.equal(relationshipState(parsedSample[0]), "following");
 
 const reconciled = reconcileFollowingSnapshot([
   { username: "still_here", relationshipTypes: ["following"], status: "keep" },
@@ -36,10 +38,13 @@ const reconciled = reconcileFollowingSnapshot([
 ], "2026-11-03T00:00:00.000Z");
 const byUsername = new Map(reconciled.records.map(item => [item.username, item]));
 assert.equal(byUsername.get("still_here").followingStatus, "following");
-assert.equal(byUsername.get("not_here").followingStatus, "not_in_latest_snapshot");
+assert.equal(byUsername.get("not_here").followingStatus, "pending_verification");
+assert.equal(relationshipState(byUsername.get("not_here")), "pending_verification");
 assert.deepEqual(Array.from(byUsername.get("not_here").relationshipTypes), ["followers"]);
-assert.equal(byUsername.get("follower_only").followingStatus, undefined);
+assert.equal(relationshipState(byUsername.get("follower_only")), "pending_verification");
 assert.equal(byUsername.get("new_following").followingStatus, "following");
+assert.equal(relationshipState({ followingStatus: "unfollowed" }), "unfollowed");
+assert.equal(relationshipState({ followingStatus: "pending_verification", relationshipTypes: ["following"] }), "pending_verification");
 assert.equal(reconciled.imported, 1);
 assert.equal(reconciled.duplicates, 1);
 assert.deepEqual(Array.from(parsedSample[0].relationshipTypes), ["following"]);
