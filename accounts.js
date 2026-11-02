@@ -50,7 +50,7 @@ function reconcileFollowingSnapshot(existingRecords,incomingRecords,timestamp=ne
  }
  return {records:[...map.values()],imported,duplicates};
 }
-function relationshipState(x){const rel=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(["unfollowed","unfollowed_manually"].includes(x.followingStatus))return "unfollowed";if(x.followingStatus==="following"||rel.includes("following"))return "following";return "pending_verification"}
+function relationshipState(x){const rel=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(["unfollowed","unfollowed_manually"].includes(x.followingStatus))return "unfollowed";if(["pending_verification","not_in_latest_snapshot"].includes(x.followingStatus))return "pending_verification";if(x.followingStatus==="following"||rel.includes("following"))return "following";return "pending_verification"}
 function relationshipLabel(state){return state==="following"?"Following":state==="unfollowed"?"Unfollowed":"Pending verification"}
 function relationLabel(x){const a=Array.isArray(x.relationshipTypes)?x.relationshipTypes:[];if(x.followingStatus==="unfollowed"||x.followingStatus==="unfollowed_manually")return a.includes("followers")?"FOLLOWER · UNFOLLOWED":"UNFOLLOWED";if(x.followingStatus==="pending_verification"||x.followingStatus==="not_in_latest_snapshot")return a.includes("followers")?"FOLLOWER · PENDING":"PENDING VERIFICATION";if(a.includes("followers")&&a.includes("following"))return "FOLLOWER + FOLLOWING";if(a.includes("followers"))return "FOLLOWER";if(a.includes("following"))return "FOLLOWING";return "IMPORTED"}
 function profileUrl(x){return "https://www.instagram.com/"+encodeURIComponent(x.username)+"/"}
