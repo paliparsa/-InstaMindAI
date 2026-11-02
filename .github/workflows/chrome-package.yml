@@ -16,6 +16,9 @@ on:
       - "review.html"
       - "review.js"
       - "review.css"
+      - "accounts.html"
+      - "accounts.js"
+      - "accounts.css"
       - ".github/workflows/chrome-package.yml"
   pull_request:
     branches: [main]
@@ -31,6 +34,9 @@ on:
       - "review.html"
       - "review.js"
       - "review.css"
+      - "accounts.html"
+      - "accounts.js"
+      - "accounts.css"
       - ".github/workflows/chrome-package.yml"
 
 permissions:
@@ -65,6 +71,7 @@ jobs:
           node --check extension/popup.js
           node --check extension/options.js
           node --check extension/review.js
+          node --check extension/accounts.js
           node <<'NODE'
           const fs = require('fs');
           const m = JSON.parse(fs.readFileSync('extension/manifest.json', 'utf8'));
